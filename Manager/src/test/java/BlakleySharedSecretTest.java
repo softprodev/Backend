@@ -3,65 +3,64 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
-class BlakleySharedSecretTest {
-    private final static int totalShares = 3; //number of generate keys
-    private final static int requiredShares = 2; //number of keys for solve the secret (requiredShares <= totalShares)
-    private final static int bits = 512; //number of bits of keys
+public class BlakleySharedSecretTest {
+    final static int n = 3; //number of generate keys
+    final static int t = 2; //number of keys for solve the secret (t <= n)
+    final static int bits = 512; //number of bits of keys
 
     @Test
-    void testBlakley() {
-        BigInteger allKeys[][] = new BigInteger[totalShares][];
+    public void testShamir() {
+
+        BigInteger keys[][] = new BigInteger[n][];
+        BigInteger keys2[][] = new BigInteger[t][];
+        BigInteger pass[] = new BigInteger[t];
+
         String secret = "Secret Sharing";
 
         //Divide secret in parts (coordinates).
-        BigInteger[] pass = Blakley.divide(requiredShares, secret.getBytes());
+        pass = Blakley.divide(t, secret.getBytes());
 
-        //Generate totalShares keys
-        for (int i = 0; i < totalShares; i++)
-            allKeys[i] = Blakley.createdKey(pass, bits);
+        //Generate n keys
+        for (int i = 0; i < n; i++)
+            keys[i] = Blakley.createdKey(pass, bits);
 
-        for (int i = 0; i < totalShares; i++) {
-            for (int j = 0; j < allKeys[i].length; j++) {
-                System.out.println("Key[" + i + "] = " + allKeys[i][j].toString());
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < keys[i].length; j++) {
+                System.out.println("Key[" + i + "] = " + keys[i][j].toString());
             }
         }
 
         //Select 2 keys from 3
-        String text = restoreSecretWith(allKeys[0], allKeys[1]);
+
+        keys2[0] = keys[0];
+        keys2[1] = keys[1];
+
+        //solve
+        byte[] b = Blakley.solutionKey(keys2);
+
+        //Convert to String
+        String text = new String(b);
         System.out.println("From first and second secret: " + text);
 
 
-        text = restoreSecretWith(allKeys[0], allKeys[2]);
-        System.out.println("From first and second third: " + text);
+        keys2[0] = keys[0];
+        keys2[1] = keys[2];
+        //solve
+        b = Blakley.solutionKey(keys2);
 
         //Convert to String
-        text = restoreSecretWith(allKeys[1], allKeys[2]);
+        text = new String(b);
+        System.out.println("From first and second third: " + text);
+
+
+        keys2[1] = keys[1];
+        keys2[1] = keys[2];
+        //solve
+        b = Blakley.solutionKey(keys2);
+
+        //Convert to String
+        text = new String(b);
         System.out.println("From second and third secret: " + text);
-    }
-
-    private String restoreSecretWith(BigInteger[]... keys) {
-        byte[] des = Blakley.solutionKey(keys);
-        return new String(des);
-    }
-
-    @Test
-    void testBlakleySpeed() {
-        BigInteger allKeys[][] = new BigInteger[totalShares][];
-        String secret = "Secret Sharing";
-
-        //Divide secret in parts (coordinates).
-        BigInteger[] pass = Blakley.divide(requiredShares, secret.getBytes());
-
-        //Generate totalShares keys
-        for (int i = 0; i < totalShares; i++)
-            allKeys[i] = Blakley.createdKey(pass, bits);
-
-        long start = System.currentTimeMillis();
-        for (int i = 0; i < 100_000; i++) {
-            restoreSecretWith(allKeys[0], allKeys[1]);
-        }
-        long totalTime = System.currentTimeMillis() - start;
-        System.out.format("Total time [s] = %.3f", totalTime / 1000d);
     }
 
 }

@@ -16,6 +16,7 @@ public class Bitcoin {
     public final File fileWallet;
     public final File fileSpvBlockchain;
 
+    private final NetworkParameters params;
     public final WalletAppKit kit;
 
     public Bitcoin() {
@@ -28,6 +29,7 @@ public class Bitcoin {
 
     public Bitcoin(File rootDirectory, NetworkParameters params) {
         BriefLogFormatter.init();
+        this.params = params;
         this.rootDirectory = rootDirectory;
 
         String filePrefix = params == MainNetParams.get() ? STORAGE_NAME_MAINNET : STORAGE_NAME_TESTNET;
@@ -50,7 +52,7 @@ public class Bitcoin {
         return kit;
     }
 
-    public void cleanUp() {
+    public void cleanup() {
         fileWallet.delete();
         fileSpvBlockchain.delete();
     }
