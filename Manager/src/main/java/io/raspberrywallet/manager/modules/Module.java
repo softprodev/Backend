@@ -1,7 +1,5 @@
 package io.raspberrywallet.manager.modules;
 
-import org.omg.CORBA.TIMEOUT;
-
 public abstract class Module {
 
     /**
@@ -79,11 +77,9 @@ public abstract class Module {
     }
 
     public static final int STATUS_OK = 200;
-    public static final int STATUS_TIMEOUT = 432;
-    public static final int STATUS_WAITING = 100;
 
     private byte[] payload;
-    private int status = STATUS_WAITING;
+    private int status;
     private String statusString;
     private byte[] decryptedValue;
 
@@ -118,8 +114,6 @@ public abstract class Module {
 
         private boolean run = false;
         private long sleepTime = 1000;
-        private long timeout = 3000;
-        private long startTime;
 
         public CheckRunnable stop() {
             run = false;
@@ -136,30 +130,14 @@ public abstract class Module {
             return this;
         }
 
-        public CheckRunnable setTimeout(long tout) {
-            timeout = tout;
-            return this;
-        }
-
         public void run() {
-            startTime = System.currentTimeMillis();
             while (run) {
-
-                if (check()) {
+                if (check())
                     process();
-                    run = false;
-                }
-
-                if(System.currentTimeMillis() - startTime > timeout && status == STATUS_WAITING) {
-                    run = false;
-                    status = STATUS_TIMEOUT;
-                    statusString = "Timed out waiting for Module interaction.";
-                }
             }
             try {
                 Thread.sleep(sleepTime);
             } catch (Exception e) {
-                e.printStackTrace();
             }
         }
     }
@@ -168,14 +146,13 @@ public abstract class Module {
 
     //Co ma się stać po wykonaniu wszystkiego, czyli odblokowaniu klucza lub anuluj
     public void destroy() {
-
         //Kończymy oczekiwanie
         checkRunnable.stop();
         try {
             //Join bo tak ładnie
             checkThread.join(checkRunnable.sleepTime * 2);
         } catch (Exception e) {
-            e.printStackTrace();
+
         } finally {
             //Zerujemy pamięć
             synchronized (this) {
