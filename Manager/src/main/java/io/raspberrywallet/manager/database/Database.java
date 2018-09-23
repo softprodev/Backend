@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Database {
@@ -38,7 +37,7 @@ public class Database {
 	}
 	
 	/**
-	 * zerofill everything in RAM
+	 * "zerujemy" wszystko co niebezpieczne
 	 */
 	private synchronized void cleanUp() {
 		for(WalletEntity we:wallets) {
@@ -50,7 +49,7 @@ public class Database {
 	}
 	
 	/**
-	 * Return all wallets serialized as JSON
+	 * Zwróć wszystkie wallety zserializowane jako JSON
 	 * @return - JSON
 	 */
 	public byte[] getSerialized() throws JsonProcessingException {
@@ -60,47 +59,37 @@ public class Database {
 	}
 	
 	/**
-	 * Loading database from encrypted file
-	 * @param file - encrypted JSON file
-	 * @throws IOException - filesystem problem
+	 * Wczytujemy bazę danych z zaszyfrowanego pliku
+	 * @param file - zaszyfrowany JSON
+	 * @throws IOException - problem plików
 	 */
 	private void loadDatabase(File file) throws IOException {
 		cleanUp();
 		byte[] data = Files.readAllBytes(file.toPath());
 		data = decrypt(data);
-
-		wallets.addAll(deserialize(data));
-	}
-
-	/**
-	 * JSON deserialization
-	 * @param data - decrypted JSON data
-	 * @return - wallet list
-	 */
-	public List<WalletEntity> deserialize(byte[] data) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		//TODO jak tego sie uzywa xdd
-		List<WalletEntity> wallets = mapper.readValue(data, new TypeReference<List<WalletEntity>>(){});
-		return wallets;
+		List<WalletEntity> wallets = mapper.readValue(data, List.class);
+		wallets.addAll(wallets);
 	}
-
+	
 	/**
-	 * Save encrypted database to file
-	 * @param file - destination file
-	 * @throws IOException - filesystem problem
+	 * Zapisujemy zaszyfrowaną bazę danych do pliku
+	 * @param file - plik z bazą
+	 * @throws IOException - problem plików
 	 */
 	private void saveDatabase(File file) throws IOException {
 		byte[] data=encrypt(getSerialized());
 		Files.write(file.toPath(), data);
 	}
 	
-	public byte[] encrypt(byte[] data) {
-		//TODO encryption
+	private byte[] encrypt(byte[] data) {
+		//TODO enkrypcja
 		return data;
 	}
 	
-	public byte[] decrypt(byte[] data) {
-		//TODO decryption
+	private byte[] decrypt(byte[] data) {
+		//TODO dekrypcja
 		return data;
 	}
 	
