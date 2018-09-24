@@ -1,10 +1,9 @@
-package io.raspberrywallet.manager.cryptography.sharedsecret.blakley;
-
+import io.raspberrywallet.manager.cryptography.sharedsecret.blakley.Blakley;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
-class BlakleyTest {
+class BlakleySharedSecretTest {
     private final int totalShares = 3; //number of generate keys
     private final int requiredShares = 2; //number of keys for solve the secret (requiredShares <= totalShares)
     private final int bits = 512; //number of bits of keys
