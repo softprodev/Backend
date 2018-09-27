@@ -3,7 +3,6 @@
 *.iml
 lib/
 *.ipr
-*.tmp
 *.spvchain
 *.wallet
 .vertx/

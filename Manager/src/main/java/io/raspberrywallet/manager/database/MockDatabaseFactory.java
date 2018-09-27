@@ -1,6 +1,7 @@
 package io.raspberrywallet.manager.database;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Fake database for debug purposes
@@ -10,6 +11,7 @@ public class MockDatabaseFactory {
     public static MockDatabaseFactory getInstance() {
         return new MockDatabaseFactory();
     }
+
     private Database database;
     WalletEntity wallet = null;
     private WalletEntity walletEntity;
@@ -20,6 +22,18 @@ public class MockDatabaseFactory {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public MockDatabaseFactory setBalance(double balance) {
+        if (walletEntity == null) walletEntity = new WalletEntity();
+        walletEntity.balance = balance;
+        return this;
+    }
+
+    public MockDatabaseFactory setAddress(String address) {
+        if (walletEntity == null) walletEntity = new WalletEntity();
+        walletEntity.address = new String(address);
+        return this;
     }
 
     public MockDatabaseFactory placeKeyPart(byte[] payload, int order) {
