@@ -1,13 +1,12 @@
 package io.raspberrywallet.manager.modules;
 
-
+import java.util.HashMap;
 
 public abstract class Module {
 
-	/*
-	 * Module info formatted as JSON.
-	 * */
-	
+    /**
+     * Wydaje mi się, że to zwróci server
+     */
     @Override
     public String toString() {
         return "{\"id\":\"" + getId() + "\", \"status\":\"" + getStatusString() + "\"}";
@@ -21,25 +20,26 @@ public abstract class Module {
     }
 
     /**
-     * Check if needed interaction (User-Module) has been completed
-     * 
-     * @return true, if we are ready to decrypt
+     * Sprawdzamy tym, czy wszystko o co został
+     * człowiek poproszony zostało wykonane
+     *
+     * @return true, jeśli jesteśmy gotowi do deszyfrowania
      */
     public abstract boolean check();
 
     /**
-     * used for decryption, should include `this.decrypt(Decrypter)`
+     * tutaj deszyfrujemy partię klucza
      */
     public abstract void process();
 
     /**
-     * this function should prepare module before consecutive use.
-     * Manager should call this.
+     * tutaj przygotowujemy moduł do działania
      */
     public abstract void register();
 
     /**
-     * Manager uses this to start the Module after register()
+     * Uruchamiamy tym moduł do oczekiwania na bodźce
+     * z zewnątrz
      */
     public void start() {
         checkThread = new Thread(checkRunnable.enable().setSleepTime(100));
@@ -47,27 +47,28 @@ public abstract class Module {
     }
 
     /**
-     * Encryption function when creating wallet
+     * Szyfrowanie partii klucza przy tworzeniu struktury portfela
      *
-     * @param data   - unencrypted key part
-     * @param params - additional params
-     * @return encrypted payload
+     * @param data   - niezaszyfrowana partia
+     * @param params - dodatkowe parametry
+     * @return zaszyfrowany payload do zapisania w bazie
      */
     public abstract byte[] encryptInput(byte[] data, Object... params);
 
     /**
-     * Returns status of the module to show to the user
+     * Pobieranie teraźniejszego statusu, wiadomości dla użytkownika
      *
-     * @return message
+     * @return wiadomość informacyjna
      */
     public String getStatusString() {
         return statusString == null ? "null" : statusString;
     }
 
     /**
-     * Setting the status message for the user
+     * W implementacji, ustawiamy tu wiadomość, błąd lub instrukcję
+     * dla usera
      *
-     * @param statusS - new status
+     * @param statusS - nowa wiadomość
      */
     protected void setStatusString(String statusS) {
         this.statusString = statusS;
@@ -78,19 +79,18 @@ public abstract class Module {
     }
 
     public static final int STATUS_OK = 200;
-    public static final int STATUS_TIMEOUT = 432;
-    public static final int STATUS_WAITING = 100;
 
     private byte[] payload;
-    private int status = STATUS_WAITING;
+    private int status;
     private String statusString;
     private byte[] decryptedValue;
+    private HashMap<String, String> input = new HashMap<String, String>();
 
     public void newSession() {
         input.clear();
         register();
     }
-    
+
     public void setPayload(byte[] payload) {
         this.payload = payload.clone();
     }
@@ -118,8 +118,6 @@ public abstract class Module {
 
         private boolean run = false;
         private long sleepTime = 1000;
-        private long timeout = 3000;
-        private long startTime;
 
         public CheckRunnable stop() {
             run = false;
@@ -136,52 +134,31 @@ public abstract class Module {
             return this;
         }
 
-        public CheckRunnable setTimeout(long tout) {
-            timeout = tout;
-            return this;
-        }
-
         public void run() {
-            startTime = System.currentTimeMillis();
             while (run) {
-
-                if (check()) {
+                if (check())
                     process();
-                    run = false;
-                }
-
-                if(System.currentTimeMillis() - startTime > timeout && status == STATUS_WAITING) {
-                    run = false;
-                    status = STATUS_TIMEOUT;
-                    statusString = "Timed out waiting for Module interaction.";
-                }
             }
             try {
                 Thread.sleep(sleepTime);
             } catch (Exception e) {
-                e.printStackTrace();
             }
         }
     }
 
     CheckRunnable checkRunnable = new CheckRunnable();
 
-    /* 
-     * Used when everything has been completed, both in "cancel" and "done" cases.
-     * Override this to be sure everything else is cleaned.
-     * Manager should call this.
-     * */
+    //Co ma się stać po wykonaniu wszystkiego, czyli odblokowaniu klucza lub anuluj
     public void destroy() {
-
-        //Stopping the wait thread
+        //Kończymy oczekiwanie
         checkRunnable.stop();
         try {
-            //Joining
+            //Join bo tak ładnie
             checkThread.join(checkRunnable.sleepTime * 2);
         } catch (Exception e) {
-            e.printStackTrace();
+
         } finally {
-            //Clearing the RAM
+            //Zerujemy pamięć
             synchronized (this) {
                 zeroFill();
             }
@@ -189,9 +166,7 @@ public abstract class Module {
     }
 
 
-    /*
-     * Fill everything with "zeroes"
-     */
+    // Wypełnia wszystko "zerami" w pamięci
     public synchronized void zeroFill() {
         if (decryptedValue != null) {
             for (int i = 0; i < decryptedValue.length; ++i)
@@ -242,6 +217,33 @@ public abstract class Module {
             this.status = de.getCode();
             this.statusString = "Error: " + de.getMessage();
         }
+    }
+
+    /**
+     * Sets input for this Module from user
+     * @param key - key of the parameter
+     * @param value - value of the parameter
+     */
+    public void setInput(String key, String value) {
+        input.put(key, value);
+    }
+
+    /**
+     * Checks if user has submitted any input
+     * @param key - key of the parameter
+     * @return - if key exists
+     */
+    protected boolean hasInput(String key) {
+        return input.containsKey(key);
+    }
+
+    /**
+     * Gets the value which user has submitted
+     * @param key - parameter key
+     * @return - value of the parameter
+     */
+    protected String getInput(String key) {
+        return input.get(key);
     }
 
 }
