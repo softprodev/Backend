@@ -2,11 +2,8 @@
 .idea
 *.iml
 lib/
-*.ipr
-*.tmp
 *.spvchain
 *.wallet
 .vertx/
 Manager/target/
-ServerHttp/target/
 out/

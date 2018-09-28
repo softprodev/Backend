@@ -23,13 +23,13 @@ import java.nio.ByteOrder;
  * You can use any object as header and this class is going to handle read/write operations.
  */
 
-class CipherHeaderManager {
+public class CipherHeaderManager {
     
     // in bytes
     private final static int HEADER_METADATA_SIZE = 5;
     private final static int INT_SIZE = 4;
     
-    static <E extends Serializable> void writeCipherData(E cipherData, OutputStream outputStream) throws IOException {
+    public static <E extends Serializable> void writeCipherData(E cipherData, OutputStream outputStream) throws IOException {
         byte[] cipherDataSerialized = SerializationUtils.serialize(cipherData);
         byte[] serializedDataLength = convertIntToByteArray(cipherDataSerialized.length);
         
@@ -38,7 +38,7 @@ class CipherHeaderManager {
         outputStream.write(cipherDataSerialized);
     }
     
-    static <E extends Serializable> E readCipherData(InputStream inputStream) throws IOException {
+    public static <E extends Serializable> E readCipherData(InputStream inputStream) throws IOException {
         int cipherDataLength = getHeaderSize(inputStream);
         
         byte[] cipherDataBytes = new byte[cipherDataLength];
@@ -47,7 +47,7 @@ class CipherHeaderManager {
         return (E)SerializationUtils.deserialize(cipherDataBytes);
     }
     
-    static int getTotalHeaderSize(InputStream inputStream) throws IOException {
+    public static int getTotalHeaderSize(InputStream inputStream) throws IOException {
         byte isBigEndian = (byte) inputStream.read();
         byte[] bytesWithCipherDataLength = new byte[INT_SIZE];
         inputStream.read(bytesWithCipherDataLength, 0, INT_SIZE);
