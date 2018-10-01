@@ -10,9 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import java.util.zip.*;
-import java.io.*;
-
 public class Database {
 
     @Getter
@@ -105,23 +102,13 @@ public class Database {
     }
 
     public byte[] encrypt(byte[] data) {
-    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	DeflaterOutputStream dos = new DeflaterOutputStream(baos);
-    	dos.write(data);
-    	dos.flush();
-    	dos.close();
         //TODO encryption
-        return baos.toByteArray();
+        return data;
     }
 
     public byte[] decrypt(byte[] data) {
-        ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        InflaterInputStream iis = new InflaterInputStream(bais);
-        int len = -1;
-        byte[] buffer = new byte[4096];
-        while ( (len = iis.read(buffer)) != -1); //TODO join arrays into one blob
-    	//TODO decryption
-        return buffer;
+        //TODO decryption
+        return data;
     }
 
 }
