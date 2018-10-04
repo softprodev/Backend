@@ -4,10 +4,8 @@ import io.raspberrywallet.module.Module;
 import io.raspberrywallet.module.ModuleState;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 
 public interface Manager {
     String ping(); // for DEBUG purposes
@@ -19,7 +17,6 @@ public interface Manager {
     /**
      * @return all available modules
      */
-    @NonNls
     List<Module> getModules();
 
     /**
@@ -28,19 +25,13 @@ public interface Manager {
     ModuleState getModuleState(@NotNull String moduleId);
 
     /**
-     * @return HTML UI form that require some input from user
-     */
-    @Nullable
-    String getModuleUi(@NotNull String moduleId);
-
-    /**
      * Validate input for specified module, and receive next Step or Failure
      *
      * @param moduleId id of corresponding nodule
-     * @param inputMap inputs for current Step
+     * @param input    input for current Step
      * @return Response with next Step or null if failed
      */
-    Response nextStep(@NotNull String moduleId, Map<String, String> inputMap); // pass input for current step and return next step
+    Response nextStep(@NotNull String moduleId, byte[] input); // pass input for current step and return next step
 
 
 
@@ -92,16 +83,5 @@ public interface Manager {
      */
     void restoreFromBackupPhrase(@NotNull List<String> mnemonicWords);
 
-    /*
-     * Utilities
-     */
-
-    /**
-     * Gets temperature of the CPU
-     *
-     * @return temperature as string in Celsius
-     */
-    @NonNls
-    String getCpuTemperature();
 
 }

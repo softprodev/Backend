@@ -84,11 +84,6 @@ internal class MainVerticle(private val manager: Manager) : CoroutineVerticle() 
                 obj("availableBalance" to manager.availableBalance)
             }
         }
-        router.get("/api/cpuTemp").coroutineHandler {
-            respondJson {
-                obj("cpuTemp" to manager.cpuTemperature)
-            }
-        }
         router.route("/*").handler(StaticHandler.create("assets"))
 
         awaitResult<HttpServer> {

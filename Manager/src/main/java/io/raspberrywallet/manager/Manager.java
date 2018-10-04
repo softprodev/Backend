@@ -2,13 +2,11 @@ package io.raspberrywallet.manager;
 
 import io.raspberrywallet.Response;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
-import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.module.ModuleState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.stream.Collectors.toList;
@@ -20,12 +18,9 @@ public class Manager implements io.raspberrywallet.Manager {
      */
     private final ConcurrentHashMap<String, Module> modules = new ConcurrentHashMap<>();
     private final Bitcoin bitcoin;
-    private final TemperatureMonitor tempMonitor;
 
-
-    public Manager(Bitcoin bitcoin, TemperatureMonitor tempMonitor) {
+    public Manager(Bitcoin bitcoin) {
         this.bitcoin = bitcoin;
-        this.tempMonitor = tempMonitor;
     }
 
     @Override
@@ -34,12 +29,12 @@ public class Manager implements io.raspberrywallet.Manager {
     }
 
     @Override
-    public Response nextStep(@NotNull String moduleId, Map<String, String> input) {
-        modules.get(moduleId).setInputs(input);
-        return new Response(null, Response.Status.OK);
+    public Response nextStep(@NotNull String moduleId, byte[] input) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
-    /*
+    /**
      * Modules
      */
 
@@ -52,7 +47,7 @@ public class Manager implements io.raspberrywallet.Manager {
 
 
     @Override
-    public ModuleState getModuleState(@NotNull String id) {
+    public ModuleState getModuleState(String id) {
         ModuleState state = ModuleState.FAILED;
         state.setMessage("Unknown module!");
         if (modules.containsKey(id)) {
@@ -61,12 +56,6 @@ public class Manager implements io.raspberrywallet.Manager {
         }
         return state;
     }
-
-    @Override
-    public String getModuleUi(@NotNull String moduleId) {
-        return modules.get(moduleId).getHtmlUi();
-    }
-
 
     void addModule(Module module) {
         modules.put(module.getId(), module);
@@ -77,7 +66,7 @@ public class Manager implements io.raspberrywallet.Manager {
     }
 
 
-    /*
+    /**
      * Bitcoin Domain
      */
 
@@ -104,15 +93,6 @@ public class Manager implements io.raspberrywallet.Manager {
     @Override
     public String getAvailableBalance() {
         return bitcoin.getAvailableBalance();
-    }
-
-    /*
-     * Utilities
-     */
-
-    @Override
-    public String getCpuTemperature() {
-        return tempMonitor.call();
     }
 
 }
