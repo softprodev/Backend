@@ -25,7 +25,7 @@ import kotlinx.coroutines.experimental.launch
 
 class Server(private val manager: Manager) {
     companion object {
-        const val PORT = 8080
+        const val PORT = 9090
     }
 
     fun start() {
@@ -82,6 +82,11 @@ internal class MainVerticle(private val manager: Manager) : CoroutineVerticle() 
         router.get("/api/availableBalance").coroutineHandler {
             respondJson {
                 obj("availableBalance" to manager.availableBalance)
+            }
+        }
+        router.get("/api/cpuTemp").coroutineHandler {
+            respondJson {
+                obj("cpuTemp" to manager.cpuTemperature)
             }
         }
         router.route("/*").handler(StaticHandler.create("assets"))
