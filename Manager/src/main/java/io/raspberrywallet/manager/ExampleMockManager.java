@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ExampleMockManager extends Manager {
 
-    public ExampleMockManager(List<Module> modules, Bitcoin bitcoin, TemperatureMonitor tempMonitor, Configuration config) {
+    public ExampleMockManager(List<Module> modules, Bitcoin bitcoin, TemperatureMonitor tempMonitor) {
         super(modules, bitcoin, tempMonitor);
         Module mod = new ExampleModule();
         addModule(mod);
