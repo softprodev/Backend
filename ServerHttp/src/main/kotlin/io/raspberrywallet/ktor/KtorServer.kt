@@ -31,10 +31,8 @@ import io.raspberrywallet.ktor.Paths.freshAddress
 import io.raspberrywallet.ktor.Paths.moduleHtmlUi
 import io.raspberrywallet.ktor.Paths.moduleState
 import io.raspberrywallet.ktor.Paths.modules
-import io.raspberrywallet.ktor.Paths.networks
 import io.raspberrywallet.ktor.Paths.nextStep
 import io.raspberrywallet.ktor.Paths.ping
-import io.raspberrywallet.ktor.Paths.wifiStatus
 import io.raspberrywallet.server.Server
 import kotlinx.html.*
 import org.slf4j.event.Level
@@ -60,8 +58,6 @@ object Paths {
     val estimatedBalance = prefix + "estimatedBalance"
     val availableBalance = prefix + "availableBalance"
     val cpuTemp = prefix + "cpuTemp"
-    val networks = prefix + "networks"
-    val wifiStatus = prefix + "wifiStatus"
 }
 
 fun Application.mainModule() {
@@ -77,12 +73,6 @@ fun Application.mainModule() {
     install(DefaultHeaders)
 
     routing {
-        get(wifiStatus) {
-            call.respond(mapOf("wifiStatus" to manager.wifiStatus))
-        }
-        get(networks) {
-            call.respond(mapOf("networks" to manager.networkList))
-        }
         get(ping) {
             call.respond(mapOf("ping" to manager.ping()))
         }
@@ -124,41 +114,8 @@ fun Application.mainModule() {
         get("/") {
             call.respond(indexPage)
         }
-        get("/status") {
-            call.respond(status)
-        }
-        get("/index") {
-            call.respond(indexPage)
-        }
         static("/") {
             resources("assets")
-        }
-    }
-}
-
-val status = HtmlContent {
-    head {
-        title { +"System status" }
-        link(rel = "Stylesheet", type = "text/css", href = "/style.css")
-    }
-    body {
-        h1 { a(href = "/index/") { +"<- Back" } }
-        h2 { +"System status" }
-        div( classes = "temperature") {
-            +"Temperature: "
-            when {
-                manager.cpuTemperature.toFloat() > 47 -> span(classes = "hot") { + (manager.cpuTemperature + " 'C") }
-                manager.cpuTemperature.toFloat() < 40 -> span(classes = "cold") { +(manager.cpuTemperature + " 'C") }
-                else -> span(classes = "medium") { +(manager.cpuTemperature + " 'C") }
-            }
-        }
-        table {
-            for ( (param, value) in manager.wifiStatus) {
-                tr {
-                    td( classes = "param" ) { +param }
-                    td { +value }
-                }
-            }
         }
     }
 }
@@ -166,7 +123,6 @@ val status = HtmlContent {
 val indexPage = HtmlContent {
     head {
         title { +"Raspberry Wallet" }
-        link(rel = "Stylesheet", type = "text/css", href = "/style.css")
     }
     body {
         h1 { a(href = "/index.html") { +"Webapp" } }
