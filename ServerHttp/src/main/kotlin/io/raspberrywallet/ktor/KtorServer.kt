@@ -10,13 +10,13 @@ import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.html.HtmlContent
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.ContentType
 import io.ktor.http.content.resources
 import io.ktor.http.content.static
 import io.ktor.jackson.jackson
-import io.ktor.request.receive
 import io.ktor.request.receiveText
 import io.ktor.response.respond
+import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
@@ -28,14 +28,11 @@ import io.raspberrywallet.ktor.Paths.cpuTemp
 import io.raspberrywallet.ktor.Paths.currentAddress
 import io.raspberrywallet.ktor.Paths.estimatedBalance
 import io.raspberrywallet.ktor.Paths.freshAddress
-import io.raspberrywallet.ktor.Paths.isLocked
+import io.raspberrywallet.ktor.Paths.moduleHtmlUi
 import io.raspberrywallet.ktor.Paths.moduleState
 import io.raspberrywallet.ktor.Paths.modules
 import io.raspberrywallet.ktor.Paths.nextStep
 import io.raspberrywallet.ktor.Paths.ping
-import io.raspberrywallet.ktor.Paths.restoreFromBackupPhrase
-import io.raspberrywallet.ktor.Paths.sendCoins
-import io.raspberrywallet.ktor.Paths.unlockWallet
 import io.raspberrywallet.server.Server
 import kotlinx.html.*
 import org.slf4j.event.Level
@@ -50,23 +47,21 @@ fun startKtorServer(newManager: Manager) {
 }
 
 object Paths {
-    const val prefix = "/api/"
-    const val ping = prefix + "ping"
-    const val modules = prefix + "modules"
-    const val moduleState = prefix + "moduleState/{id}"
-    const val nextStep = prefix + "nextStep/{id}"
-    const val restoreFromBackupPhrase = prefix + "restoreFromBackupPhrase"
-    const val unlockWallet = prefix + "unlockWallet"
-    const val isLocked = prefix + "isLocked"
-    const val currentAddress = prefix + "currentAddress"
-    const val freshAddress = prefix + "freshAddress"
-    const val estimatedBalance = prefix + "estimatedBalance"
-    const val availableBalance = prefix + "availableBalance"
-    const val sendCoins = prefix + "sendCoins"
-    const val cpuTemp = prefix + "cpuTemp"
+    val prefix = "/api/"
+    val ping = prefix + "ping"
+    val modules = prefix + "modules"
+    val moduleState = prefix + "moduleState/{id}"
+    val nextStep = prefix + "nextStep/{id}"
+    val moduleHtmlUi = prefix + "moduleHtmlUi/{id}"
+    val currentAddress = prefix + "currentAddress"
+    val freshAddress = prefix + "freshAddress"
+    val estimatedBalance = prefix + "estimatedBalance"
+    val availableBalance = prefix + "availableBalance"
+    val cpuTemp = prefix + "cpuTemp"
 }
 
 fun Application.mainModule() {
+
     install(ContentNegotiation) {
         jackson {
             enable(SerializationFeature.INDENT_OUTPUT)
@@ -79,67 +74,44 @@ fun Application.mainModule() {
 
     routing {
         get(ping) {
-            manager.tap()
             call.respond(mapOf("ping" to manager.ping()))
         }
         get(cpuTemp) {
-            manager.tap()
             call.respond(mapOf("cpuTemp" to manager.cpuTemperature))
         }
         get(modules) {
-            manager.tap()
             call.respond(manager.modules)
         }
         get(moduleState) {
-            manager.tap()
             val id = call.parameters["id"]!!
             val moduleState = manager.getModuleState(id)
             call.respond(mapOf("state" to moduleState.name, "message" to moduleState.message))
         }
         post(nextStep) {
-            manager.tap()
             val id = call.parameters["id"]!!
             val input = call.receiveText()
             val inputMap: Map<String, String> = jacksonObjectMapper().readValue(input, object : TypeReference<Map<String, String>>() {})
             val response = manager.nextStep(id, inputMap)
             call.respond(mapOf("response" to response.status))
         }
-        post(sendCoins) {
-            manager.tap()
-            val (amount, recipient) = call.receive<SendCoinBody>()
-            manager.sendCoins(amount, recipient)
-            call.respond(HttpStatusCode.OK)
-        }
-        get(isLocked) {
-            call.respond(mapOf("isLocked" to manager.isLocked))
-        }
-        get(unlockWallet) {
-            manager.tap()
-            call.respond(manager.unlockWallet())
-        }
-        post(restoreFromBackupPhrase) {
-            manager.tap()
-            val (mnemonicWords, modules, required) = call.receive<RestoreFromBackup>()
-            call.respond(manager.restoreFromBackupPhrase(mnemonicWords, modules, required))
+        get(moduleHtmlUi) {
+            val id = call.parameters["id"]!!
+            val htmlUiForm = manager.getModuleUi(id) ?: ""
+            call.respondText(text = htmlUiForm, contentType = ContentType.Text.Html)
         }
         get(currentAddress) {
-            manager.tap()
             call.respond(mapOf("currentAddress" to manager.currentReceiveAddress))
         }
         get(freshAddress) {
-            manager.tap()
             call.respond(mapOf("freshAddress" to manager.freshReceiveAddress))
         }
         get(estimatedBalance) {
-            manager.tap()
             call.respond(mapOf("estimatedBalance" to manager.estimatedBalance))
         }
         get(availableBalance) {
-            manager.tap()
             call.respond(mapOf("availableBalance" to manager.availableBalance))
         }
         get("/") {
-            manager.tap()
             call.respond(indexPage)
         }
         static("/") {
@@ -147,9 +119,6 @@ fun Application.mainModule() {
         }
     }
 }
-
-data class RestoreFromBackup(val mnemonicWords: List<String>, val modules: Map<String, Map<String, String>>, val required: Int)
-data class SendCoinBody(val amount: String, val recipient: String)
 
 val indexPage = HtmlContent {
     head {
@@ -179,7 +148,7 @@ val indexPage = HtmlContent {
                 a(href = nextStep) { +nextStep }
             }
             li {
-                a(href = unlockWallet) { +unlockWallet }
+                a(href = moduleHtmlUi) { +moduleHtmlUi }
             }
         }
         h2 { +"Bitcoin" }

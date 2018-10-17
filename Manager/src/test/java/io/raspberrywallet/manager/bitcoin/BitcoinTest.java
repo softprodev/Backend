@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.bitcoin;
 
+import com.google.common.util.concurrent.Service;
 import io.raspberrywallet.manager.TestUtils;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.params.TestNet3Params;
@@ -16,11 +17,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BitcoinTest {
     static private Bitcoin bitcoin;
-
+    static private Service syncBlockchainService;
 
     @BeforeAll
     static void setup() {
         bitcoin = new Bitcoin();
+        syncBlockchainService = bitcoin.startBlockchainAsync();
     }
 
     @Test
@@ -34,6 +36,7 @@ public class BitcoinTest {
 
     @Test
     void should_sync_test_net() {
+        syncBlockchainService.awaitRunning();
 
         assertEquals(bitcoin.params(), TestNet3Params.get());
         assertEquals(bitcoin.kit.directory(), bitcoin.rootDirectory);
@@ -48,7 +51,7 @@ public class BitcoinTest {
         List<String> mnemonicCode = TestUtils.generateRandomDeterministicMnemonicCode();
         mnemonicCode.forEach(System.out::println);
 
-        bitcoin.restoreFromSeed(mnemonicCode);
+        bitcoin.restoreFromBackupPhrase(mnemonicCode);
     }
 
     @Test
@@ -56,6 +59,7 @@ public class BitcoinTest {
         byte[] seed = SecureRandom.getInstanceStrong().generateSeed(32);
 
         // Importing keys is available only with blockchain synced
+        syncBlockchainService.awaitRunning();
 
         bitcoin.importKey(seed);
         assertTrue(Arrays.equals(bitcoin.kit.wallet().getImportedKeys().get(0).getPrivKeyBytes(), seed));
@@ -65,6 +69,7 @@ public class BitcoinTest {
 
     @Test
     void getCurrentReceiveAddress() {
+        syncBlockchainService.awaitRunning();
         String currentAddress = bitcoin.getCurrentReceiveAddress();
 
         assertNotNull(currentAddress);
@@ -75,6 +80,7 @@ public class BitcoinTest {
 
     @Test
     void getFreshReceiveAddress() {
+        syncBlockchainService.awaitRunning();
 
         String freshAddress = bitcoin.getFreshReceiveAddress();
         assertNotNull(freshAddress);
@@ -84,6 +90,7 @@ public class BitcoinTest {
 
     @Test
     void getEstimatedBalance() {
+        syncBlockchainService.awaitRunning();
 
         String balance = bitcoin.getEstimatedBalance();
         println(balance);
@@ -91,6 +98,7 @@ public class BitcoinTest {
 
     @Test
     void getAvailableBalance() {
+        syncBlockchainService.awaitRunning();
 
         String availableBalance = bitcoin.getAvailableBalance();
         println(availableBalance);

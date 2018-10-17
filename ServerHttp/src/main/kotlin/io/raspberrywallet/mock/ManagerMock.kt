@@ -8,24 +8,8 @@ import io.raspberrywallet.step.SimpleStep
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
-    override fun tap() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
-    override fun lockWallet(): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun isLocked(): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun sendCoins(amount: String, recipientAddress: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-
-    class SampleModule(name: String, description: String, val htmlUiForm: String? = null) : Module(name, description, null)
+    class SampleModule(name: String, description: String, val htmlUiForm: String? = null) : Module(name, description)
 
     private val _modules = listOf(
         SampleModule("PIN", "Module that require enter 4 digits code", """<input type="text" name="pin">"""),
@@ -48,7 +32,6 @@ class ManagerMock : Manager {
     override fun nextStep(moduleId: String, input: Map<String, String>): Response =
         Response(SimpleStep("Do something"), Response.Status.OK)
 
-    override fun unlockWallet() = true
 
     override fun getModuleUi(moduleId: String): String? = _modules[moduleId]?.htmlUiForm
 
@@ -60,7 +43,7 @@ class ManagerMock : Manager {
 
     override fun getAvailableBalance() = "0.0"
 
-    override fun restoreFromBackupPhrase(mnemonicWords: MutableList<String>, selectedModulesWithInputs: MutableMap<String, MutableMap<String, String>>, required: Int) {
+    override fun restoreFromBackupPhrase(mnemonicWords: MutableList<String>) {
         val phrase = mnemonicWords.reduce { acc, s -> acc + s }
         println(phrase)
     }
