@@ -1,14 +1,17 @@
 package io.raspberrywallet.manager.database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class WalletEntity {
-
-    @JsonProperty("keyparts")
+	
+	@Getter @Setter
+	@JsonProperty("keyparts")
 	public List<KeyPartEntity> parts = new ArrayList<KeyPartEntity>();
 
 	/*

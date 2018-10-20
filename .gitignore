@@ -1,6 +1,5 @@
 # Created by .ignore support plugin (hsz.mobi)
 .idea
-.gradle
 *.iml
 lib/
 *.ipr
@@ -11,5 +10,3 @@ lib/
 Manager/target/
 ServerHttp/target/
 out/
-build/
-*.bin
