@@ -15,8 +15,10 @@ import io.ktor.http.content.resources
 import io.ktor.http.content.static
 import io.ktor.jackson.jackson
 import io.ktor.request.receive
+import io.ktor.request.receiveParameters
 import io.ktor.request.receiveText
 import io.ktor.response.respond
+import io.ktor.response.respondRedirect
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
@@ -35,6 +37,11 @@ import io.raspberrywallet.ktor.Paths.Modules.nextStep
 import io.raspberrywallet.ktor.Paths.Modules.restoreFromBackupPhrase
 import io.raspberrywallet.ktor.Paths.Modules.unlockWallet
 import io.raspberrywallet.ktor.Paths.Modules.walletStatus
+import io.raspberrywallet.ktor.Paths.Network.networks
+import io.raspberrywallet.ktor.Paths.Network.setWifi
+import io.raspberrywallet.ktor.Paths.Network.setupWiFi
+import io.raspberrywallet.ktor.Paths.Network.statusEndpoint
+import io.raspberrywallet.ktor.Paths.Network.wifiStatus
 import io.raspberrywallet.ktor.Paths.Utils.cpuTemp
 import io.raspberrywallet.ktor.Paths.Utils.ping
 import kotlinx.html.*
@@ -50,15 +57,17 @@ fun startKtorServer(newManager: Manager) {
     }, port = PORT, module = Application::mainModule).start(wait = true)
 }
 
-object Paths {
-    const val prefix = "/api/"
+sealed class Paths {
+    companion object {
+        const val prefix = "/api/"
+    }
 
-    object Utils {
+    object Utils : Paths() {
         const val ping = prefix + "ping"
         const val cpuTemp = prefix + "cpuTemp"
     }
 
-    object Modules {
+    object Modules : Paths() {
         const val modules = prefix + "modules"
         const val moduleState = prefix + "moduleState/{id}"
         const val nextStep = prefix + "nextStep/{id}"
@@ -68,12 +77,21 @@ object Paths {
         const val walletStatus = prefix + "walletStatus"
     }
 
-    object Bitcoin {
+    object Bitcoin : Paths() {
         const val currentAddress = prefix + "currentAddress"
         const val freshAddress = prefix + "freshAddress"
         const val estimatedBalance = prefix + "estimatedBalance"
         const val availableBalance = prefix + "availableBalance"
         const val sendCoins = prefix + "sendCoins"
+    }
+
+    object Network : Paths() {
+        const val cpuTemp = prefix + "cpuTemp"
+        const val networks = prefix + "networks"
+        const val wifiStatus = prefix + "wifiStatus"
+        const val setupWiFi = "/setupWiFi"
+        const val setWifi = "/setWiFi"
+        const val statusEndpoint = "/status"
     }
 }
 
@@ -89,6 +107,23 @@ fun Application.mainModule() {
     install(DefaultHeaders)
 
     routing {
+        /* Index */
+        get(statusEndpoint) {
+            manager.tap()
+            call.respond(status)
+        }
+        get("/") {
+            manager.tap()
+            call.respond(indexPage)
+        }
+        get("/index") {
+            manager.tap()
+            call.respond(indexPage)
+        }
+        static("/") {
+            resources("assets")
+        }
+
         /*Utils*/
         get(ping) {
             manager.tap()
@@ -97,6 +132,26 @@ fun Application.mainModule() {
         get(cpuTemp) {
             manager.tap()
             call.respond(mapOf("cpuTemp" to manager.cpuTemperature))
+        }
+
+        /* Network */
+        get(wifiStatus) {
+            call.respond(mapOf("wifiStatus" to manager.wifiStatus))
+        }
+        get(networks) {
+            call.respond(mapOf("networks" to manager.networkList))
+        }
+        post(setWifi) {
+            val params = call.receiveParameters()
+            val psk = params["psk"]!!
+            val ssid = params["ssid"]!!
+
+            manager.wifiConfig = mutableMapOf("ssid" to ssid, "psk" to psk)
+
+            call.respondRedirect(statusEndpoint)
+        }
+        get(setupWiFi) {
+            call.respond(setNetwork)
         }
 
         /*Modules*/
@@ -158,14 +213,6 @@ fun Application.mainModule() {
             manager.tap()
             call.respond(mapOf("availableBalance" to manager.availableBalance))
         }
-        get("/") {
-            manager.tap()
-            call.respond(indexPage)
-        }
-
-        static("/") {
-            resources("assets")
-        }
     }
 }
 
@@ -175,6 +222,7 @@ data class SendCoinBody(val amount: String, val recipient: String)
 val indexPage = HtmlContent {
     head {
         title { +"Raspberry Wallet" }
+        link(rel = "Stylesheet", type = "text/css", href = "/style.css")
     }
     body {
         h1 { a(href = "/index.html") { +"Webapp" } }
@@ -185,6 +233,21 @@ val indexPage = HtmlContent {
             }
             li {
                 a(href = cpuTemp) { +cpuTemp }
+            }
+        }
+        h2 { +"Network" }
+        ul {
+            li {
+                a(href = wifiStatus) { +wifiStatus }
+            }
+            li {
+                a(href = networks) { +networks }
+            }
+            li {
+                a(href = setWifi) { +setWifi }
+            }
+            li {
+                a(href = setupWiFi) { +setupWiFi }
             }
         }
         h2 { +"Modules" }
@@ -225,6 +288,65 @@ val indexPage = HtmlContent {
             }
             li {
                 a(href = availableBalance) { +availableBalance }
+            }
+        }
+    }
+}
+
+val setNetwork = HtmlContent {
+    head {
+        title { +"Change Wi-Fi settings" }
+        link(rel = "Stylesheet", type = "text/css", href = "/style.css")
+    }
+    body {
+        h1 { a(href = "/index/") { +"<- Back" } }
+        h2 { +"New Wi-Fi config" }
+        h3 { +"ESSID:" }
+        form(method = FormMethod.post, action = setWifi) {
+            select {
+                name = "ssid"
+                for (network in manager.networkList) {
+                    option {
+                        value = network
+                        +network
+                    }
+                }
+            }
+            h3 { +"Pre shared key:" }
+            input(type = InputType.password, name = "psk") {}
+            input(type = InputType.submit) {}
+        }
+    }
+}
+
+val status = HtmlContent {
+    head {
+        title { +"System status" }
+        link(rel = "Stylesheet", type = "text/css", href = "/style.css")
+    }
+    body {
+        h1 { a(href = "/index/") { +"<- Back" } }
+        h2 { +"System status" }
+        div(classes = "temperature") {
+            +"Temperature: "
+            when {
+                manager.cpuTemperature.toFloat() > 47 -> span(classes = "hot") { +(manager.cpuTemperature + " 'C") }
+                manager.cpuTemperature.toFloat() < 40 -> span(classes = "cold") { +(manager.cpuTemperature + " 'C") }
+                else -> span(classes = "medium") { +(manager.cpuTemperature + " 'C") }
+            }
+        }
+        table {
+            for ((param, value) in manager.wifiStatus) {
+                tr {
+                    td(classes = "param") { +param }
+                    td { +value }
+                }
+            }
+            for ((param, value) in manager.wifiConfig) {
+                tr {
+                    td(classes = "param") { +param }
+                    td { +value }
+                }
             }
         }
     }

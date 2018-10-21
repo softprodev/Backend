@@ -9,6 +9,7 @@ import io.raspberrywallet.step.SimpleStep
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
+
     override fun getWalletStatus() = WalletStatus.ENCRYPTED
 
     override fun tap() {
@@ -64,4 +65,11 @@ class ManagerMock : Manager {
 
     override fun getCpuTemperature() = "75 °C"
 
+    override fun getNetworkList(): Array<String> = arrayOf<String>("UPCwifi", "other wifi", "klocuch12")
+
+    override fun getWifiStatus(): MutableMap<String, String> = mutableMapOf("freq" to "21.37 GHz", "speed" to "21.37 Tb/s")
+
+    override fun getWifiConfig(): MutableMap<String, String> = mutableMapOf("ssid" to "fakenet")
+
+    override fun setWifiConfig(newConf: MutableMap<String, String>?): Int = 0
 }
