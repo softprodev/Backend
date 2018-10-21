@@ -20,9 +20,6 @@
         <src.dir.test.java>${project.basedir}/src/test/java</src.dir.test.java>
         <src.dir.test.resources>${project.basedir}/src/test/resources</src.dir.test.resources>
         <jackson.version>2.9.0</jackson.version>
-        <junit.version>5.2.0</junit.version>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.source>1.8</maven.compiler.source>
     </properties>
 
     <dependencies>
@@ -76,14 +73,6 @@
             <groupId>com.pi4j</groupId>
             <artifactId>pi4j-core</artifactId>
             <version>1.1</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.0</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
