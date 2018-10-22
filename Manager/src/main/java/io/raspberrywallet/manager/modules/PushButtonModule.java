@@ -4,18 +4,11 @@ import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalInput;
 import com.pi4j.io.gpio.RaspiPin;
-import com.pi4j.io.gpio.event.GpioPinListenerDigital;
-
-import static io.raspberrywallet.manager.modules.PushButtonModule.Inputs.PRESSED;
 
 public class PushButtonModule extends Module {
 
-    private final GpioController gpio = GpioFactory.getInstance();
-    private final GpioPinDigitalInput pushButton = gpio.provisionDigitalInputPin(RaspiPin.GPIO_23);
-
-    public PushButtonModule() {
-        super("Press Button");
-    }
+    final GpioController gpio = GpioFactory.getInstance();
+    final GpioPinDigitalInput pushButton = gpio.provisionDigitalInputPin(RaspiPin.GPIO_23);
 
     @Override
     public String getDescription() {
@@ -24,14 +17,12 @@ public class PushButtonModule extends Module {
 
     @Override
     public boolean check() {
-        return hasInput(PRESSED) && Boolean.parseBoolean(getInput(PRESSED));
+        if (pushButton.isHigh()) return true;
+        return false;
     }
 
     @Override
     public void register() {
-        pushButton.addListener((GpioPinListenerDigital) event ->
-                setInput(PRESSED, event.getState().isHigh() + "")
-        );
     }
 
     @Override
@@ -47,9 +38,5 @@ public class PushButtonModule extends Module {
     @Override
     public byte[] decrypt(byte[] payload) {
         return payload;
-    }
-
-    public static class Inputs {
-        public static String PRESSED = "pressed";
     }
 }

@@ -1,12 +1,8 @@
 package io.raspberrywallet.manager.modules;
 
-import io.raspberrywallet.manager.modules.exceptions.KeypartDecryptionException;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 
 public class ExampleModule extends Module {
-
-    public ExampleModule() {
-        super("Do something");
-    }
 
     @Override
     public String getDescription() {
@@ -23,6 +19,7 @@ public class ExampleModule extends Module {
     @Override
     public void register() {
         lastTime = System.currentTimeMillis();
+        setStatusString("Wait 5 seconds for decryption to start");
     }
 
     @Override
@@ -54,8 +51,8 @@ public class ExampleModule extends Module {
      * We are processing (decrypting) the keypart with a KEY.
      */
     @Override
-    public byte[] decrypt(byte[] payload) throws KeypartDecryptionException {
-        if (payload == null) throw new KeypartDecryptionException(KeypartDecryptionException.NO_DATA);
+    public byte[] decrypt(byte[] payload) throws DecryptionException {
+        if (payload == null) throw new DecryptionException(DecryptionException.getNO_DATA());
 
         byte[] r = payload.clone();
 
