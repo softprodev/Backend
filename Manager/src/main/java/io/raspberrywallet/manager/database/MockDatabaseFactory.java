@@ -22,11 +22,12 @@ public class MockDatabaseFactory {
         }
     }
 
-    public MockDatabaseFactory placeKeyPart(byte[] payload) {
+    public MockDatabaseFactory placeKeyPart(byte[] payload, int order) {
         KeyPartEntity kp = new KeyPartEntity();
+        kp.order = order;
         kp.payload = payload.clone();
         if (walletEntity == null) walletEntity = new WalletEntity();
-        walletEntity.getParts().add(kp);
+        walletEntity.parts.add(kp);
         return this;
     }
 

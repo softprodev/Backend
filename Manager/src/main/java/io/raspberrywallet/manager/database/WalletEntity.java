@@ -9,11 +9,10 @@ import java.util.List;
 import java.util.Objects;
 
 public class WalletEntity {
-
-	@Getter
-	@Setter
+	
+	@Getter @Setter
 	@JsonProperty("keyparts")
-	private List<KeyPartEntity> parts = new ArrayList<KeyPartEntity>();
+	public List<KeyPartEntity> parts = new ArrayList<KeyPartEntity>();
 
 	/*
 	* Needed to override this, so `WalletEntity` can be easily compared.
