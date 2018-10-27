@@ -1,4 +1,4 @@
-package io.raspberrywallet.manager.common.interfaces;
+package io.raspberrywallet.manager.common;
 
 public interface Destroyable {
 
