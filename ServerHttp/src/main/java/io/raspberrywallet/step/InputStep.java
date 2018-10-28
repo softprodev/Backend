@@ -1,4 +1,4 @@
-package io.raspberrywallet.contract.step;
+package io.raspberrywallet.step;
 
 public final class InputStep extends Step {
     private byte[] inputData;

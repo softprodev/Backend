@@ -1,4 +1,4 @@
-package io.raspberrywallet.contract.module;
+package io.raspberrywallet.module;
 
 public enum ModuleState {
     READY, WAITING, AUTHORIZED, FAILED;

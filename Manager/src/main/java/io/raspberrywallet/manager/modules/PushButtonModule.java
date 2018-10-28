@@ -1,13 +1,12 @@
-package io.raspberrywallet.manager.modules.pushbutton;
+package io.raspberrywallet.manager.modules;
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalInput;
 import com.pi4j.io.gpio.RaspiPin;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
-import io.raspberrywallet.manager.modules.Module;
 
-import static io.raspberrywallet.manager.modules.pushbutton.PushButtonModule.Inputs.PRESSED;
+import static io.raspberrywallet.manager.modules.PushButtonModule.Inputs.PRESSED;
 
 public class PushButtonModule extends Module {
 

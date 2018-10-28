@@ -1,8 +1,8 @@
 package io.raspberrywallet.manager.modules;
 
-import io.raspberrywallet.contract.RequiredInputNotFound;
-import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
+import io.raspberrywallet.RequiredInputNotFound;
 import org.jetbrains.annotations.NotNull;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -29,8 +29,8 @@ public abstract class Module {
         return this.getClass().getName();
     }
 
-    public io.raspberrywallet.contract.module.Module asServerModule() {
-        return new io.raspberrywallet.contract.module.Module(getId(), getId(), getDescription(), getHtmlUi()) {
+    public io.raspberrywallet.module.Module asServerModule() {
+        return new io.raspberrywallet.module.Module(getId(), getId(), getDescription(), getHtmlUi()) {
         };
     }
 
@@ -108,7 +108,7 @@ public abstract class Module {
      * @param key - key of the parameter
      * @return - if key exists
      */
-    public boolean hasInput(String key) {
+    boolean hasInput(String key) {
         return input.containsKey(key);
     }
 
@@ -119,7 +119,7 @@ public abstract class Module {
      * @return - value of the parameter
      */
     @Nullable
-    public String getInput(String key) {
+    String getInput(String key) {
         return input.get(key);
     }
 

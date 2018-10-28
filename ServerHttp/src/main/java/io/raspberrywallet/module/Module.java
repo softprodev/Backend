@@ -1,4 +1,4 @@
-package io.raspberrywallet.contract.module;
+package io.raspberrywallet.module;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

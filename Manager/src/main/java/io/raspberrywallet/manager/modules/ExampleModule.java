@@ -1,8 +1,7 @@
-package io.raspberrywallet.manager.modules.example;
+package io.raspberrywallet.manager.modules;
 
 
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
-import io.raspberrywallet.manager.modules.Module;
 
 public class ExampleModule extends Module {
 

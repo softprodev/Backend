@@ -1,6 +1,6 @@
-package io.raspberrywallet.contract;
+package io.raspberrywallet;
 
-import io.raspberrywallet.contract.step.Step;
+import io.raspberrywallet.step.Step;
 import org.jetbrains.annotations.Nullable;
 
 public class Response {
