@@ -25,25 +25,25 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.raspberrywallet.Manager
-import io.raspberrywallet.ktor.Paths.Bitcoin.availableBalance
-import io.raspberrywallet.ktor.Paths.Bitcoin.currentAddress
-import io.raspberrywallet.ktor.Paths.Bitcoin.estimatedBalance
-import io.raspberrywallet.ktor.Paths.Bitcoin.freshAddress
-import io.raspberrywallet.ktor.Paths.Bitcoin.sendCoins
-import io.raspberrywallet.ktor.Paths.Modules.lockWallet
-import io.raspberrywallet.ktor.Paths.Modules.moduleState
-import io.raspberrywallet.ktor.Paths.Modules.modules
-import io.raspberrywallet.ktor.Paths.Modules.nextStep
-import io.raspberrywallet.ktor.Paths.Modules.restoreFromBackupPhrase
-import io.raspberrywallet.ktor.Paths.Modules.unlockWallet
-import io.raspberrywallet.ktor.Paths.Modules.walletStatus
-import io.raspberrywallet.ktor.Paths.Network.networks
-import io.raspberrywallet.ktor.Paths.Network.setWifi
-import io.raspberrywallet.ktor.Paths.Network.setupWiFi
-import io.raspberrywallet.ktor.Paths.Network.statusEndpoint
-import io.raspberrywallet.ktor.Paths.Network.wifiStatus
-import io.raspberrywallet.ktor.Paths.Utils.cpuTemp
-import io.raspberrywallet.ktor.Paths.Utils.ping
+import io.raspberrywallet.server.Paths.Bitcoin.availableBalance
+import io.raspberrywallet.server.Paths.Bitcoin.currentAddress
+import io.raspberrywallet.server.Paths.Bitcoin.estimatedBalance
+import io.raspberrywallet.server.Paths.Bitcoin.freshAddress
+import io.raspberrywallet.server.Paths.Bitcoin.sendCoins
+import io.raspberrywallet.server.Paths.Modules.lockWallet
+import io.raspberrywallet.server.Paths.Modules.moduleState
+import io.raspberrywallet.server.Paths.Modules.modules
+import io.raspberrywallet.server.Paths.Modules.nextStep
+import io.raspberrywallet.server.Paths.Modules.restoreFromBackupPhrase
+import io.raspberrywallet.server.Paths.Modules.unlockWallet
+import io.raspberrywallet.server.Paths.Modules.walletStatus
+import io.raspberrywallet.server.Paths.Network.networks
+import io.raspberrywallet.server.Paths.Network.setWifi
+import io.raspberrywallet.server.Paths.Network.setupWiFi
+import io.raspberrywallet.server.Paths.Network.statusEndpoint
+import io.raspberrywallet.server.Paths.Network.wifiStatus
+import io.raspberrywallet.server.Paths.Utils.cpuTemp
+import io.raspberrywallet.server.Paths.Utils.ping
 import kotlinx.html.*
 import org.slf4j.event.Level
 
@@ -297,6 +297,8 @@ val setNetwork = HtmlContent {
     head {
         title { +"Change Wi-Fi settings" }
         link(rel = "Stylesheet", type = "text/css", href = "/style.css")
+        script { src="/scripts.js"; type = "text/javascript" }
+        script { src="/jquery.min.js"; type = "text/javascript" }
     }
     body {
         h1 { a(href = "/index/") { +"<- Back" } }
@@ -304,6 +306,7 @@ val setNetwork = HtmlContent {
         h3 { +"ESSID:" }
         form(method = FormMethod.post, action = setWifi) {
             select {
+                id="ssid"
                 name = "ssid"
                 for (network in manager.networkList) {
                     option {
@@ -311,6 +314,11 @@ val setNetwork = HtmlContent {
                         +network
                     }
                 }
+            }
+            span {
+                onClick = "refreshNetworks()"
+                style = "cursor: pointer, link, hand"
+                + "Refresh"
             }
             h3 { +"Pre shared key:" }
             input(type = InputType.password, name = "psk") {}
@@ -334,6 +342,9 @@ val status = HtmlContent {
                 manager.cpuTemperature.toFloat() < 40 -> span(classes = "cold") { +(manager.cpuTemperature + " 'C") }
                 else -> span(classes = "medium") { +(manager.cpuTemperature + " 'C") }
             }
+        }
+        a(href = setupWiFi) {
+            +"Configure Wi-Fi"
         }
         table {
             for ((param, value) in manager.wifiStatus) {
