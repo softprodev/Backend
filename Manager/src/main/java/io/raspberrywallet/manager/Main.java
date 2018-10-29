@@ -8,6 +8,7 @@ import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.manager.modules.ModuleClassLoader;
+import io.raspberrywallet.server.Server;
 import org.apache.commons.cli.CommandLine;
 
 import java.io.File;
@@ -16,8 +17,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static io.raspberrywallet.ktor.KtorServerKt.startKtorServer;
 import static io.raspberrywallet.manager.cli.CliUtils.parseArgs;
-import static io.raspberrywallet.server.KtorServerKt.startKtorServer;
 
 public class Main {
 
@@ -35,7 +36,10 @@ public class Main {
 
         Manager manager = new Manager(db, modules, bitcoin, temperatureMonitor);
 
-        startKtorServer(manager);
+        if (Opts.VERTX.isSet(cmd) || Opts.SERVER.getValue(cmd).equals(Opts.VERTX.name()))
+            new Server(manager).start();
+        else
+            startKtorServer(manager);
 
         prepareShutdownHook(bitcoin, manager);
     }

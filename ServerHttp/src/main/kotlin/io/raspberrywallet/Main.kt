@@ -1,10 +1,15 @@
 package io.raspberrywallet
 
+import io.raspberrywallet.ktor.startKtorServer
 import io.raspberrywallet.mock.ManagerMock
-import io.raspberrywallet.server.startKtorServer
+import io.raspberrywallet.server.Server
 
 internal fun main(args: Array<String>) {
-    startKtorServer(ManagerMock())
+    if (args.isNotEmpty() && args[0] == "vertx")
+        Server(ManagerMock()).start()
+    else
+        startKtorServer(ManagerMock())
+
 }
 
 
