@@ -138,14 +138,14 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                 Module module = modulesToDecrypt.get(i);
                 module.setInputs(selectedModulesWithInputs.get(module.getId()));
                 KeyPartEntity keyPartEntity = new KeyPartEntity();
-                keyPartEntity.setPayload(module.encrypt(keys[i].toByteArray()));
-                keyPartEntity.setModule(module.getId());
-                
+                keyPartEntity.payload = module.encrypt(keys[i].toByteArray());
+                keyPartEntity.module = module.getId();
                 keyPartEntities.add(keyPartEntity);
             }
-            database.addAllKeyParts(keyPartEntities);
+            walletEntity.setParts(keyPartEntities);
+            database.saveWallet(walletEntity);
 
-        } catch (ShamirException | EncryptionException e) {
+        } catch (ShamirException | IOException | EncryptionException e) {
             e.printStackTrace();
         }
     
@@ -187,7 +187,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         try {
             Wallet wallet = bitcoin.getWallet();
             wallet.encrypt(keyCrypter, key);
-            wallet.saveToFile(bitcoin.getWalletFile());
+            wallet.saveToFile(bitcoin.walletFile);
             return true;
         } catch (KeyCrypterException | IOException e) {
             Logger.err(e.getMessage());
@@ -212,7 +212,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                             return null;
 
                         KeyPartEntity dbEntity = keyPartEntity.get();
-                        return module.decrypt(dbEntity.getPayload());
+                        return module.decrypt(dbEntity.payload);
                     } catch (DecryptionException | RequiredInputNotFound e) {
                         e.printStackTrace();
                         return null;

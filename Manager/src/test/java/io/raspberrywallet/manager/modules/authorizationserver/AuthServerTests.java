@@ -11,9 +11,6 @@ import java.util.Arrays;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * These tests needs running authorization server to pass!
- */
 class AuthServerTests {
     
     private byte[] encryptionData = "secret data".getBytes();
@@ -22,7 +19,7 @@ class AuthServerTests {
     private AuthorizationServerModule module;
     
     @BeforeEach
-    void initializeModule() {
+    void initializeModule() throws IllegalAccessException, InstantiationException {
         module = new AuthorizationServerModule();
         module.setInput("password", "abadziaba123");
     }
