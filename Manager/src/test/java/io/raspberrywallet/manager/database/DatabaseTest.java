@@ -1,124 +1,63 @@
 package io.raspberrywallet.manager.database;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import io.raspberrywallet.manager.Configuration;
+import io.raspberrywallet.manager.cryptography.common.Password;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class DatabaseTest {
 
-    private Database db = null;
+    private Database database = null;
+    private Password password = new Password("mock passowrd".toCharArray());
 
-    private static final byte[] KEYPART_1_1 = new byte[]{11, 22, 33, 44};
-    private static final byte[] KEYPART_1_2 = "#$#$^$^!#".getBytes();
-    private static final String KEYPART_1_1_MODULE = "io.raspberrywallet.manager.modules.example.ExampleModule";
-    private static final String KEYPART_1_2_MODULE = "io.raspberrywallet.manager.modules.pushbutton.PushButtonModule";
-
-    private static WalletEntity walletEntity1 = null;
-    private static KeyPartEntity keyPartEntity1_1 = new KeyPartEntity();
-    private static KeyPartEntity keyPartEntity1_2 = new KeyPartEntity();
-
-    private static byte[] serializedData = null;
-    private static byte[] encrypted = null;
+    private static KeyPartEntity exampleModuleKeypart = new KeyPartEntity();
+    private static KeyPartEntity pushButtonModuleKeypart = new KeyPartEntity();
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws DecryptionException, EncryptionException {
         try {
-            db = new Database(true);
-            walletEntity1 = new WalletEntity();
+            Configuration configuration = new Configuration();
+            database = new Database(configuration, password);
 
-            keyPartEntity1_1.payload = KEYPART_1_1;
-            keyPartEntity1_1.module = KEYPART_1_1_MODULE;
+            exampleModuleKeypart.setModule("io.raspberrywallet.manager.modules.example.ExampleModule");
+            exampleModuleKeypart.setPayload("BGF$#Y%34".getBytes());
 
-            keyPartEntity1_2.payload = KEYPART_1_2;
-            keyPartEntity1_2.module = KEYPART_1_2_MODULE;
+            pushButtonModuleKeypart.setModule("io.raspberrywallet.manager.modules.pushbutton.PushButtonModule");
+            pushButtonModuleKeypart.setPayload("$TN$@C54B".getBytes());
 
-            walletEntity1.getParts().add(keyPartEntity1_1);
-            walletEntity1.getParts().add(keyPartEntity1_2);
+            database.addKeyPart(exampleModuleKeypart);
+            database.addKeyPart(pushButtonModuleKeypart);
 
-            db.setWallet(walletEntity1);
+            assertNotNull(database);
         } catch (IOException e) {
+            fail();
             e.printStackTrace();
-        } finally {
-            assertNotNull(db);
-        }
-    }
-
-
-    @Test
-    void serialize() {
-
-        serializedData = null;
-
-        try {
-            serializedData = db.getSerialized();
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        } finally {
-            assertNotNull(serializedData);
         }
     }
 
     @Test
-    void deserialize() {
-        serialize();
-
-        WalletEntity newWallet = null;
-        assertNotNull(serializedData);
+    void DatabaseEncryptionThenDecryptionWorks() {
         try {
-            newWallet = db.deserialize(serializedData);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            assertNotNull(newWallet);
-        }
+            int walletHash = database.getWallet().hashCode();
+            database.saveWallet();
 
-        /*
-         * `List::containsAll` uses `Object::equals` to determine whether a collection contains another.
-         * This condition checks if `List`s are equal using overridden `Object::equal`.
-         * */
-        assertEquals(newWallet, walletEntity1);
-    }
+            // encrypted copy should still exists in file
+            database.destroy();
 
-    @Test
-    void encrypt() {
-        try {
-            encrypted = db.encrypt(db.getSerialized());
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            assertNotNull(encrypted);
+            database.loadDatabase();
+            int decryptedWalletHash = database.getWallet().hashCode();
+
+            assertEquals(walletHash, decryptedWalletHash);
+
+        } catch (EncryptionException | DecryptionException | IOException e) {
+            fail(e.getMessage());
         }
     }
 
-    @Test
-    void decrypt() {
-        encrypt();
-
-        assertNotNull(encrypted);
-
-        byte[] decrypted = null;
-        try {
-            decrypted = db.decrypt(encrypted);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            assertNotNull(decrypted);
-        }
-
-        WalletEntity newWallet = null;
-        try {
-            newWallet = db.deserialize(decrypted);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            assertNotNull(newWallet);
-        }
-
-        assertEquals(newWallet, walletEntity1);
-    }
 }
