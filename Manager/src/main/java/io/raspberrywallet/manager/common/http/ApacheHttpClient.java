@@ -50,9 +50,14 @@ public abstract class ApacheHttpClient {
     
     Header[] toHeadersArray(Form form) {
         List<NameValuePair> list = form.build();
-        return list.stream()
-                .map(nameValuePair -> new BasicHeader(nameValuePair.getName(), nameValuePair.getValue()))
-                .toArray(Header[]::new);
+        List<Header> result = new ArrayList<>(list.size());
+        list.forEach(nameValuePair -> {
+            BasicHeader basicHeader = new BasicHeader(nameValuePair.getName(), nameValuePair.getValue());
+            result.add(basicHeader);
+        });
+        
+        Header[] headers = new Header[result.size()];
+        return result.toArray(headers);
     }
     
 }

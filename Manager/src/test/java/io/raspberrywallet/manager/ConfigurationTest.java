@@ -22,7 +22,7 @@ class ConfigurationTest {
                 "autolock-seconds: 1800\n" +
                 "bitcoin:\n" +
                 "  network: testnet\n" +
-                "  user-agent: RaspberryWallet\n" +
+                "  userAgent: RaspberryWallet\n" +
                 "\n" +
                 "\n" +
                 "modules:\n" +
@@ -35,6 +35,7 @@ class ConfigurationTest {
                 "    endpoints:\n" +
                 "      set-secret: /authorization/secret/set\n" +
                 "      overwritte-secret: /authorization/secret/overwritte\n" +
+                "    https: true\n" +
                 "\n" +
                 "  PushButtonModule:\n" +
                 "    some: configuration\n" +
@@ -61,5 +62,12 @@ class ConfigurationTest {
         Configuration configuration = new Configuration(basePathPrefix);
         assertEquals(basePathPrefix, configuration.getBasePathPrefix());
     }
-    
+
+    @Test
+    void getVersion() {
+        final String version = "1.0.0";
+        Configuration configuration = new Configuration("/opt/wallet");
+        assertEquals(version, configuration.getVersion());
+    }
+
 }

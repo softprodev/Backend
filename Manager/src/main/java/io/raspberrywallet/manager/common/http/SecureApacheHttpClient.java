@@ -13,9 +13,16 @@ import java.security.NoSuchAlgorithmException;
 
 public class SecureApacheHttpClient extends ApacheHttpClient {
     
+    public SecureApacheHttpClient(Form defaultHeaders) {
+        super(defaultHeaders);
+    }
+    
     public SecureApacheHttpClient(Form defaultHeaders, boolean acceptAllCerts) {
         super(defaultHeaders);
-        httpClient = acceptAllCerts ? setupAcceptAllHttpClient() : HttpClients.createDefault();
+        if (acceptAllCerts)
+            httpClient = setupAcceptAllHttpClient();
+        else
+            httpClient = HttpClients.createDefault();
     }
     
     private HttpClient setupAcceptAllHttpClient() {
