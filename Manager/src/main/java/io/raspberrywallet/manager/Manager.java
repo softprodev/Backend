@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.DoubleConsumer;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -319,10 +318,5 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public int setWifiConfig(Map<String, String> config) {
         return this.wpaConfiguration.setFromMap(config);
-    }
-
-    @Override
-    public void addBlockChainProgressListener(@NotNull DoubleConsumer listener) {
-        bitcoin.addBlockChainProgressListener(listener);
     }
 }

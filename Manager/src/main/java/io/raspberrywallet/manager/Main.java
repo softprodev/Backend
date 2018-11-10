@@ -25,6 +25,7 @@ public class Main {
 
         File yamlConfigFile = new File(Opts.CONFIG.getValue(cmd));
         Configuration configuration = Configuration.fromYamlFile(yamlConfigFile);
+
         Bitcoin bitcoin = new Bitcoin(configuration);
 
         List<Module> modules = ModuleClassLoader.getModules(configuration);
