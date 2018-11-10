@@ -1,7 +1,6 @@
 package io.raspberrywallet.manager.modules.authorizationserver;
 
 import io.raspberrywallet.manager.common.http.ApacheHttpClient;
-import io.raspberrywallet.manager.common.http.SecureApacheHttpClient;
 import io.raspberrywallet.manager.common.http.UnsecureApacheHttpClient;
 import io.raspberrywallet.manager.common.wrappers.Credentials;
 import io.raspberrywallet.manager.common.wrappers.Secret;
@@ -31,10 +30,7 @@ class AuthorizationServerAPI {
                 .add(HttpHeaders.CONTENT_TYPE, "application/json")
                 .add("charset", "UTF-8");
 
-        if (configuration.getLoginEndpoint().startsWith("https://"))
-            httpClient = new UnsecureApacheHttpClient(defaultHeaders);
-        else
-            httpClient = new SecureApacheHttpClient(defaultHeaders);
+        httpClient = new UnsecureApacheHttpClient(defaultHeaders);
     }
 
     void login(Credentials credentials, int sessionLength) throws RequestException {
