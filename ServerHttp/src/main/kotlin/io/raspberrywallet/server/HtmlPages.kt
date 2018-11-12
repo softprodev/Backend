@@ -93,7 +93,7 @@ val setNetwork = HtmlContent {
             select {
                 id = "ssid"
                 name = "ssid"
-                for (network in globalManager.networkList) {
+                for (network in manager.networkList) {
                     option {
                         value = network
                         +network
@@ -123,22 +123,22 @@ val status = HtmlContent {
         div(classes = "temperature") {
             +"Temperature: "
             when {
-                globalManager.cpuTemperature.toFloat() > 47 -> span(classes = "hot") { +(globalManager.cpuTemperature + " 'C") }
-                globalManager.cpuTemperature.toFloat() < 40 -> span(classes = "cold") { +(globalManager.cpuTemperature + " 'C") }
-                else -> span(classes = "medium") { +(globalManager.cpuTemperature + " 'C") }
+                manager.cpuTemperature.toFloat() > 47 -> span(classes = "hot") { +(manager.cpuTemperature + " 'C") }
+                manager.cpuTemperature.toFloat() < 40 -> span(classes = "cold") { +(manager.cpuTemperature + " 'C") }
+                else -> span(classes = "medium") { +(manager.cpuTemperature + " 'C") }
             }
         }
         a(href = Paths.Network.setupWiFi) {
             +"Configure Wi-Fi"
         }
         table {
-            for ((param, value) in globalManager.wifiStatus) {
+            for ((param, value) in manager.wifiStatus) {
                 tr {
                     td(classes = "param") { +param }
                     td { +value }
                 }
             }
-            for ((param, value) in globalManager.wifiConfig) {
+            for ((param, value) in manager.wifiConfig) {
                 tr {
                     td(classes = "param") { +param }
                     td { +value }

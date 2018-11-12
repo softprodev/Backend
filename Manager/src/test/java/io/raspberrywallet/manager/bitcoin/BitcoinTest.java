@@ -6,6 +6,7 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.store.BlockStoreException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.spongycastle.crypto.params.KeyParameter;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,22 +21,20 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class BitcoinTest {
     static private Bitcoin bitcoin;
     static private List<String> mnemonicCode;
-    static private String privateKeyHash;
+    static private KeyParameter key;
 
     @BeforeAll
     static void setup() throws BlockStoreException, IOException {
         mnemonicCode = Arrays.asList("member", "team", "romance", "alarm", "antique", "legal",
                 "captain", "dutch", "matter", "dinner", "loan", "orange");
         println("Using mnemonic:" + mnemonicCode.stream().reduce("", (acc, word) -> acc + " " + word));
-        // receive address mhTMbU8NqwVobEjT6Yqq3hSu9rmPABE1RU
-        // balance 0.14001595
-        privateKeyHash = new String(Sha256Hash.hash("rasperrywallet is the best bitcoin wallet ever".getBytes()));
+
+        key = new KeyParameter(Sha256Hash.hash("rasperrywallet is the best bitcoin wallet ever".getBytes()));
 
         File tempBaseDir = Paths.get("/", "tmp", "wallet").toFile();
         tempBaseDir.mkdirs();
         Configuration configuration = new Configuration(tempBaseDir.getAbsolutePath());
-        WalletCrypter walletCrypter = new WalletCrypter();
-        bitcoin = new Bitcoin(configuration, walletCrypter);
+        bitcoin = new Bitcoin(configuration);
     }
 
     @Test
@@ -47,20 +46,19 @@ public class BitcoinTest {
 
     @Test
     void should_restore_from_mnemonic_words() {
-        bitcoin.setupWalletFromMnemonic(mnemonicCode, privateKeyHash, true);
+        bitcoin.setupWalletFromMnemonic(mnemonicCode, key);
         bitcoin.getPeerGroup().stop();
     }
 
     @Test
     void should_restore_from_file() {
-        bitcoin.setupWalletFromFile(privateKeyHash, true);
+        bitcoin.setupWalletFromFile(key);
         bitcoin.getPeerGroup().stop();
     }
 
 
     @Test
     void getCurrentReceiveAddress() throws WalletNotInitialized {
-        should_restore_from_file();
         String currentAddress = bitcoin.getCurrentReceiveAddress();
 
         assertNotNull(currentAddress);
@@ -71,7 +69,6 @@ public class BitcoinTest {
 
     @Test
     void getFreshReceiveAddress() throws WalletNotInitialized {
-        should_restore_from_file();
         String freshAddress = bitcoin.getFreshReceiveAddress();
         assertNotNull(freshAddress);
         assertEquals(freshAddress.length(), 34);
@@ -80,14 +77,12 @@ public class BitcoinTest {
 
     @Test
     void getEstimatedBalance() throws WalletNotInitialized {
-        should_restore_from_file();
         String balance = bitcoin.getEstimatedBalance();
         println(balance);
     }
 
     @Test
     void getAvailableBalance() throws WalletNotInitialized {
-        should_restore_from_file();
         String availableBalance = bitcoin.getAvailableBalance();
         println(availableBalance);
     }

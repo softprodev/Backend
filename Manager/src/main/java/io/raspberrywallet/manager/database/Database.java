@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.stasbar.Logger;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.common.interfaces.Destroyable;
+import io.raspberrywallet.manager.cryptography.common.Password;
 import io.raspberrywallet.manager.cryptography.crypto.AESEncryptedObject;
 import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
@@ -28,14 +29,14 @@ public class Database implements Destroyable {
     private WalletEntity wallet = null;
 
     private final File databaseFile;
-    private String password;
+    private Password password;
 
     public Database(Configuration config) {
         databaseFile = new File(config.getBasePathPrefix(), DATABASE_FILE_NAME);
     }
 
     public void setPassword(String password) throws EncryptionException, DecryptionException, IOException {
-        this.password = password;
+        this.password = new Password(password);
         initDatabase();
     }
 

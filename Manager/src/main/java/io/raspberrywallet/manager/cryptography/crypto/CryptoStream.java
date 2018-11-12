@@ -4,6 +4,7 @@ import io.raspberrywallet.manager.cryptography.crypto.algorithms.AESCipherParams
 import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherParams;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
+import io.raspberrywallet.manager.cryptography.common.Password;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
@@ -50,7 +51,7 @@ public class CryptoStream {
      * @throws EncryptionException If there is any error with encryption, then it's caught and thrown as
      *                             EncryptionException, with original or custom error message.
      */
-    public void encrypt(String password) throws EncryptionException {
+    public void encrypt(Password password) throws EncryptionException {
         try {
             AESCipherParams aesCipherParams = new AESCipherParams();
             Cipher cipher = aesCipherParams.getCipher(password, Cipher.ENCRYPT_MODE);
@@ -102,7 +103,7 @@ public class CryptoStream {
      * @throws DecryptionException If there is any error in decryption, then it is caught and thrown as
      *                             DecryptionException, with it's original or custom message.
      */
-    public void decrypt(String password) throws DecryptionException {
+    public void decrypt(Password password) throws DecryptionException {
         try {
             AESCipherParams aesCipherParams = CipherHeaderManager.readCipherData(inputStream);
             Cipher cipher = aesCipherParams.getCipher(password, Cipher.DECRYPT_MODE);

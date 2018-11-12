@@ -9,6 +9,8 @@ import io.raspberrywallet.manager.Configuration;
 import lombok.Getter;
 import org.bitcoinj.core.*;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
+import org.bitcoinj.crypto.KeyCrypter;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
@@ -22,6 +24,7 @@ import org.bitcoinj.wallet.KeyChainGroup;
 import org.bitcoinj.wallet.UnreadableWalletException;
 import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
+import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -32,8 +35,9 @@ import java.nio.channels.FileLock;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
-import java.util.function.IntConsumer;
+import java.util.function.DoubleConsumer;
 
 /**
  * Class representing Bitcoin network, IO, key management API,
@@ -59,12 +63,10 @@ public class Bitcoin {
     private PeerGroup peerGroup;
     private SPVBlockStore blockStore;
     private InputStream checkpoints;
-    private IntConsumer blockchainProgressListener;
-    private final WalletCrypter walletCrypter;
+    DoubleConsumer blockchainProgressListener;
 
-    public Bitcoin(Configuration configuration, @NotNull WalletCrypter walletCrypter) throws BlockStoreException, IOException {
+    public Bitcoin(Configuration configuration) throws BlockStoreException, IOException {
         BriefLogFormatter.init();
-        this.walletCrypter = walletCrypter;
         this.bitcoinConfig = configuration.getBitcoinConfig();
         this.params = parseNetworkFrom(configuration.getBitcoinConfig());
 
@@ -91,11 +93,7 @@ public class Bitcoin {
         }
     }
 
-    public void setupWalletFromMnemonic(List<String> mnemonicCode, @Nullable String password) {
-        setupWalletFromMnemonic(mnemonicCode, password, false);
-    }
-
-    void setupWalletFromMnemonic(List<String> mnemonicCode, @Nullable String password, boolean blocking) {
+    public void setupWalletFromMnemonic(List<String> mnemonicCode, @Nullable KeyParameter key) {
         DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 1539388800);
         Runnable setupWalletFromBackup = () -> {
             try {
@@ -115,7 +113,7 @@ public class Bitcoin {
 
                 } else removeOldBlockStore();
 
-                synchronizeWalletNonBlocking(wallet, password, blocking);
+                synchronizeWalletNonBlocking(wallet, key);
 
             } catch (IOException | BlockStoreException e) {
                 e.printStackTrace();
@@ -141,11 +139,7 @@ public class Bitcoin {
         }
     }
 
-    public void setupWalletFromFile(@NotNull String password) {
-        setupWalletFromFile(password, false);
-    }
-
-    void setupWalletFromFile(@NotNull String password, boolean blocking) {
+    public void setupWalletFromFile(@NotNull KeyParameter key) {
         Runnable setupWalletFromBackup = () -> {
             try {
                 wallet = Wallet.loadFromFile(walletFile);
@@ -153,9 +147,9 @@ public class Bitcoin {
                 if (!wallet.isEncrypted()) {
                     throw new SecurityException("Decrypted wallet on disk detected");
                 } else
-                    decryptWallet(wallet, password);
+                    decryptWallet(wallet, key);
 
-                synchronizeWalletNonBlocking(wallet, password, blocking);
+                synchronizeWalletNonBlocking(wallet, key);
             } catch (IOException | UnreadableWalletException e) {
                 e.printStackTrace();
             }
@@ -174,7 +168,7 @@ public class Bitcoin {
      *
      * @param wallet wallet to index transactions for
      */
-    private void synchronizeWalletNonBlocking(final Wallet wallet, @Nullable String password, boolean blocking) throws IOException {
+    private void synchronizeWalletNonBlocking(final Wallet wallet, @Nullable KeyParameter key) throws IOException {
         BlockChain chain;
         try {
             chain = new BlockChain(params, blockStore);
@@ -186,15 +180,6 @@ public class Bitcoin {
         peerGroup.addPeerDiscovery(new DnsDiscovery(params));
         chain.addWallet(wallet);
         peerGroup.addWallet(wallet);
-        Runnable afterSynchronizationComplete = () -> {
-            try {
-                if (password != null)
-                    saveEncryptedWallet(password);
-                Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
-            } catch (WalletNotInitialized | IOException e) {
-                e.printStackTrace();
-            }
-        };
         Futures.addCallback(peerGroup.startAsync(), new FutureCallback<Object>() {
 
             @Override
@@ -207,21 +192,25 @@ public class Bitcoin {
                         super.progress(pct, blocksSoFar, date);
                         Logger.d("Progress " + pct + "%");
                         if (blockchainProgressListener != null) {
-                            blockchainProgressListener.accept((int) Math.round(pct));
+                            blockchainProgressListener.accept(pct);
                             Logger.d("blockchainProgressListener not null, sending " + pct);
                         }
                     }
 
                     @Override
                     protected void doneDownload() {
-                        afterSynchronizationComplete.run();
+                        long total = System.currentTimeMillis() - start;
+                        Logger.info(String.format("Synchronization took %.2f secs", (double) total / 1000.0));
+                        try {
+                            if (key != null)
+                                saveEncryptedWallet(key);
+                            Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
+                        } catch (WalletNotInitialized | IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 };
-                if (blocking) {
-                    peerGroup.downloadBlockChain();
-                    afterSynchronizationComplete.run();
-                } else
-                    peerGroup.startBlockChainDownload(listener);
+                peerGroup.startBlockChainDownload(listener);
             }
 
             @Override
@@ -247,35 +236,35 @@ public class Bitcoin {
     /**
      * This method encrypt wallet, saves it onto disk and decrypt it back so it become again usable
      *
-     * @param password used to encrypt wallet before saving onto disk
+     * @param key key used to encrypt wallet before saving onto disk
      * @throws IOException          when the problem with saving wallet occurs
      * @throws WalletNotInitialized when you try to save not initialized wallet
      */
-    public void saveEncryptedWallet(String password) throws IOException, WalletNotInitialized {
-        saveEncryptedWallet(getWallet(), password);
-    }
+    public void saveEncryptedWallet(KeyParameter key) throws IOException, WalletNotInitialized {
+        ensureWalletInitialized();
 
-    private void saveEncryptedWallet(@NotNull Wallet wallet, String password) throws IOException {
-        encryptWallet(wallet, password);
-        wallet.saveToFile(walletFile);
+        encryptWallet(key);
+        getWallet().saveToFile(walletFile);
         Logger.d("Saved wallet to: " + walletFile.getAbsolutePath());
-        decryptWallet(wallet, password);
+        decryptWallet(key);
     }
 
-    public void encryptWallet(String password) throws WalletNotInitialized {
-        encryptWallet(getWallet(), password);
+    public void decryptWallet(KeyParameter key) throws WalletNotInitialized {
+        decryptWallet(getWallet(), key);
     }
 
-    private void encryptWallet(Wallet wallet, String password) {
-        walletCrypter.encryptWallet(wallet, password);
+    private void decryptWallet(@NotNull Wallet wallet, KeyParameter key) {
+        Logger.d("Decrypting wallet with:" + new String(key.getKey()));
+        wallet.decrypt(key);
     }
 
-    public void decryptWallet(String password) throws WalletNotInitialized {
-        decryptWallet(getWallet(), password);
-    }
-
-    private void decryptWallet(@NotNull Wallet wallet, String password) {
-        walletCrypter.decryptWallet(wallet, password);
+    public void encryptWallet(KeyParameter key) throws WalletNotInitialized {
+        Logger.d("Encrypting wallet with:" + new String(key.getKey()));
+        Wallet wallet = getWallet();
+        KeyCrypter keyCrypter = Optional
+                .ofNullable(wallet.getKeyCrypter())
+                .orElseGet(KeyCrypterScrypt::new);
+        wallet.encrypt(keyCrypter, key);
     }
 
     public String getFreshReceiveAddress() throws WalletNotInitialized {
@@ -325,7 +314,7 @@ public class Bitcoin {
      * is already running. If another copy of your app is running and you start the appkit anyway, an exception will
      * be thrown during the startup process. Returns false if the chain file does not exist or is a directory.
      */
-    private boolean isChainFileLocked() throws IOException {
+    public boolean isChainFileLocked() throws IOException {
         RandomAccessFile accessFile = null;
         try {
             File blockStoreFile = new File(bitcoinRootDirectory, this.blockStoreFile.getName());
@@ -360,7 +349,7 @@ public class Bitcoin {
         }
     }
 
-    public void addBlockChainProgressListener(IntConsumer blockchainProgressListener) {
+    public void addBlockChainProgressListener(DoubleConsumer blockchainProgressListener) {
         this.blockchainProgressListener = blockchainProgressListener;
     }
 }
