@@ -35,6 +35,7 @@ class ConfigurationTest {
                 "    endpoints:\n" +
                 "      set-secret: /authorization/secret/set\n" +
                 "      overwritte-secret: /authorization/secret/overwritte\n" +
+                "    https: true\n" +
                 "\n" +
                 "  PushButtonModule:\n" +
                 "    some: configuration\n" +
