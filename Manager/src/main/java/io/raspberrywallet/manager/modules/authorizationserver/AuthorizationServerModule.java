@@ -1,6 +1,8 @@
 package io.raspberrywallet.manager.modules.authorizationserver;
 
+import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
+import io.raspberrywallet.manager.common.generators.RandomStringGenerator;
 import io.raspberrywallet.manager.common.readers.WalletUUIDReader;
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
 import io.raspberrywallet.manager.common.wrappers.Credentials;
@@ -12,13 +14,14 @@ import io.raspberrywallet.manager.modules.Module;
 import org.apache.commons.lang.SerializationUtils;
 import org.jetbrains.annotations.Nullable;
 
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Random;
 import java.util.UUID;
 
 public class AuthorizationServerModule extends Module<AuthorizationServerConfig> {
-
-    private final static int PASSWORD_SIZE_IN_BYTES = 32;
+    public static String PASSWORD = "password";
+    private final static int PASSWORD_SIZE_IN_BYTES = 256;
 
     private final WalletUUIDReader walletUUIDReader = WalletUUIDReader.getInstance();
     private final UUID walletUUID = walletUUIDReader.get();
@@ -28,7 +31,7 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
 
     private final AuthorizationServerAPI serverAPI = new AuthorizationServerAPI(configuration);
 
-    private Random random = new Random();
+    private Random random = new SecureRandom();
 
     public AuthorizationServerModule() throws InstantiationException, IllegalAccessException {
         super("Please enter username and password for external server.", AuthorizationServerConfig.class);
@@ -43,12 +46,28 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
         return "This module is authenticating user with external authorization server.";
     }
 
+
+    /**
+     * There is no need to take actions before next encryption/decryption
+     * operations, so there is no point in implementing this method.
+     */
     @Override
+    public void register() {
+    }
+
+    @Nullable
+    @Override
+    public String getHtmlUi() {
+        return "<input type=\"text\" name=\"password\">";
+    }
+
+
     public boolean check() {
-        if (hasInput("password")) {
+        if (hasInput(PASSWORD)) {
             try {
-                String password = getInput("password");
-                serverCredentials = new Credentials(walletUUID.toString(), password);
+                String password = getInput(PASSWORD);
+                serverCredentials = new Credentials(walletUUID.toString(),
+                        Base64.getUrlEncoder().encodeToString(password.getBytes()));
                 initialize();
             } catch (RequestException e) {
                 return false;
@@ -66,16 +85,10 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
             serverAPI.login(serverCredentials);
 
         if (!serverAPI.secretIsSet(serverCredentials)) {
-            String randomSecret = getRandomString();
-            String encodedSecret = Base64.getEncoder().encodeToString(randomSecret.getBytes());
+            String randomSecret = RandomStringGenerator.get(PASSWORD_SIZE_IN_BYTES);
+            String encodedSecret = Base64.getUrlEncoder().encodeToString(randomSecret.getBytes());
             serverAPI.overwriteSecret(serverCredentials, encodedSecret);
         }
-    }
-
-    private String getRandomString() {
-        byte[] randomBytes = new byte[PASSWORD_SIZE_IN_BYTES];
-        random.nextBytes(randomBytes);
-        return new String(randomBytes);
     }
 
     @Override
@@ -84,7 +97,7 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
             initialize();
 
             String encodedSecret = serverAPI.getSecret(serverCredentials);
-            String password = new String(Base64.getDecoder().decode(encodedSecret));
+            String password = new String(Base64.getUrlDecoder().decode(encodedSecret));
 
             AESEncryptedObject<ByteWrapper> encryptedSecret =
                     CryptoObject.encrypt(new ByteWrapper(payload), password);
@@ -100,7 +113,7 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
     public byte[] decrypt(byte[] keyPart) throws DecryptionException {
         try {
             String encodedSecret = serverAPI.getSecret(serverCredentials);
-            String password = new String(Base64.getDecoder().decode(encodedSecret));
+            String password = new String(Base64.getUrlDecoder().decode(encodedSecret));
 
             AESEncryptedObject<ByteWrapper> deserializedKeyPart =
                     (AESEncryptedObject<ByteWrapper>) SerializationUtils.deserialize(keyPart);
@@ -112,19 +125,9 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
         }
     }
 
-    /**
-     * There is no need to take actions before next encryption/decryption
-     * operations, so there is no point in implementing this method.
-     */
     @Override
-    public void register() {
-    }
+    protected void validateInputs() throws RequiredInputNotFound {
 
-    @Nullable
-    @Override
-    public String getHtmlUi() {
-        return "<input type=\"text\" name=\"password\">";
     }
-
 
 }

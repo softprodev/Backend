@@ -78,7 +78,7 @@ public class ModuleClassLoader {
         ).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    public static boolean verifyJarSignature(File file) throws MalformedURLException {
+    private static boolean verifyJarSignature(File file) throws MalformedURLException {
         JarVerifier jarVerifier = new JarVerifier(file.toURI().toURL());
         try {
             jarVerifier.verify(PkiUtils.getCert());
