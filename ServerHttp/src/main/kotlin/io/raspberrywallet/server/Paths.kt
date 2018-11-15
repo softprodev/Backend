@@ -20,8 +20,6 @@ sealed class Paths {
         const val lockWallet = prefix + "lockWallet"
         const val loadWalletFromDisk = prefix + "loadWalletFromDisk"
         const val walletStatus = prefix + "walletStatus"
-        const val moduleInstall = "/installModule"
-        const val moduleInstallPost = prefix + "installModuleUpload"
     }
 
     object Bitcoin : Paths() {

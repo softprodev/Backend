@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager;
 
+import io.raspberrywallet.contract.ModuleInitializationException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.contract.WalletStatus;
@@ -53,7 +54,7 @@ class ManagerTest {
     private static File walletFile = new File("test_wallet.wallet");
 
     @BeforeEach
-    void setup() throws IllegalAccessException, InstantiationException {
+    void setup() throws IllegalAccessException, InstantiationException, ModuleInitializationException {
         bitcoin = mock(Bitcoin.class);
         temperatureMonitor = mock(TemperatureMonitor.class);
         database = mock(Database.class);
@@ -110,7 +111,7 @@ class ManagerTest {
         mnemonicCode.forEach(System.out::println);
 
         Map<String, String> pinInputs = new HashMap<>();
-        pinInputs.put(PinModule.Inputs.PIN, "1234");
+        pinInputs.put(PinModule.PIN, "1234");
 
         Map<String, Map<String, String>> selectedModulesWithInputs = new HashMap<>();
         selectedModulesWithInputs.put(pinModule.getId(), pinInputs);
@@ -133,17 +134,17 @@ class ManagerTest {
 
         Map<String, Map<String, String>> moduleToInputsMap = new HashMap<>();
         HashMap<String, String> pinInputs = new HashMap<>();
-        pinInputs.put(PinModule.Inputs.PIN, "1234");
+        pinInputs.put(PinModule.PIN, "1234");
         moduleToInputsMap.put(pinModule.getId(), pinInputs);
 
         assertThrows(IllegalStateException.class, () -> manager.unlockWallet(moduleToInputsMap));
     }
 
     @Test
-    void lockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
+    void lockWalletWhenUnlocked() throws WalletNotInitialized, EncryptionException {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
 
-        pinModule.setInput(PinModule.Inputs.PIN, "1234");
+        pinModule.setInput(PinModule.PIN, "1234");
 
         ShamirKey exampleKey = new ShamirKey(BigInteger.ONE, BigInteger.TEN, BigInteger.ONE);
         ShamirKey pinKey = new ShamirKey(BigInteger.TEN, BigInteger.ONE, BigInteger.TEN);
@@ -158,7 +159,7 @@ class ManagerTest {
 
         assertTrue(walletFile.exists());
         assertEquals(manager.getWalletStatus(), WalletStatus.ENCRYPTED);
-        assertFalse(pinModule.hasInput(PinModule.Inputs.PIN));
+        assertFalse(pinModule.hasInput(PinModule.PIN));
     }
 
     @Test
@@ -167,7 +168,7 @@ class ManagerTest {
 
         Map<String, Map<String, String>> moduleToInputsMap = new HashMap<>();
         HashMap<String, String> pinInputs = new HashMap<>();
-        pinInputs.put(PinModule.Inputs.PIN, "1234");
+        pinInputs.put(PinModule.PIN, "1234");
         moduleToInputsMap.put(pinModule.getId(), pinInputs);
 
         manager.unlockWallet(moduleToInputsMap);
