@@ -16,7 +16,7 @@ public class ServerConfig {
     public char[] keystorePassword = "raspberrywallet".toCharArray();
     @JsonProperty("key-alias")
     public String keyAlias = "ssl";
-    public int port = 9080;
+    public int port = 80;
     @JsonProperty("secure-port")
-    public int securePort = 9433;
+    public int securePort = 433;
 }
