@@ -54,7 +54,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @NotNull
     private final CommunicationChannel frontendChannel;
     private AutoLockTimer autoLockTask;
-    private Timer timer;
+    private Timer timer = new Timer();
     private Configuration configuration;
     @NotNull
     private final Runnable onLockTriggered;
@@ -85,12 +85,10 @@ public class Manager implements io.raspberrywallet.contract.Manager {
             }
             clearModuleInputs();
         };
-        restartAutoLockTask();
+        startAutoLockTask();
     }
 
-    private void restartAutoLockTask() {
-        if (timer != null) timer.cancel();
-        timer = new Timer();
+    private void startAutoLockTask() {
         autoLockTask = new AutoLockTimer(configuration.getAutoLockSeconds(), timer, onLockTriggered);
         timer.scheduleAtFixedRate(autoLockTask, Duration.ofSeconds(1).toMillis(), Duration.ofSeconds(1).toMillis());
     }
