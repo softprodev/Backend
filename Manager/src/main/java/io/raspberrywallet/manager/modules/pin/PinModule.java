@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.modules.pin;
 
+import io.raspberrywallet.contract.ModuleInitializationException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
@@ -9,20 +10,18 @@ import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionExcep
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.modules.Module;
 import org.apache.commons.lang.SerializationUtils;
-import org.jetbrains.annotations.NotNull;
 
 public class PinModule extends Module<PinConfig> {
-    public static final String PIN = "pin";
+    public static String PIN = "pin";
 
-    public PinModule() throws InstantiationException, IllegalAccessException {
+    public PinModule() throws InstantiationException, IllegalAccessException, ModuleInitializationException {
         super("Enter PIN", PinConfig.class);
     }
 
-    public PinModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException {
+    public PinModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException, ModuleInitializationException {
         super("Enter PIN", modulesConfiguration, PinConfig.class);
     }
 
-    @NotNull
     @Override
     public String getDescription() {
         return "Module that require enter a digit code to unlock.";
@@ -52,11 +51,13 @@ public class PinModule extends Module<PinConfig> {
     @Override
     protected void validateInputs() throws RequiredInputNotFound {
         String pin = getInput(PIN);
-        if (isPinWeak(pin))
+        if (isPINWeak(pin))
             throw new RequiredInputNotFound(getId(), PIN);
     }
-
-    private boolean isPinWeak(String pin) {
+    
+    private boolean isPINWeak(String pin) {
         return pin == null || pin.length() < configuration.minLength || pin.length() > configuration.maxLength;
     }
+
+
 }

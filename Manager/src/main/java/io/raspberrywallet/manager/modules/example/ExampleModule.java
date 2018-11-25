@@ -4,7 +4,6 @@ package io.raspberrywallet.manager.modules.example;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.modules.Module;
-import org.jetbrains.annotations.NotNull;
 
 public class ExampleModule extends Module<ExampleConfig> {
     public ExampleModule() throws InstantiationException, IllegalAccessException {
@@ -15,7 +14,6 @@ public class ExampleModule extends Module<ExampleConfig> {
         super("Do something", modulesConfiguration, ExampleConfig.class);
     }
 
-    @NotNull
     @Override
     public String getDescription() {
         return "An example waiting and xoring module to show how things work.";

@@ -63,6 +63,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.security.KeyStore
 import java.time.Duration
+import java.util.*
 
 lateinit var globalManager: Manager
 
@@ -212,8 +213,7 @@ class KtorServer(val manager: Manager,
                 mp.forEachPart { part ->
                     when (part) {
                         is PartData.FileItem -> {
-                            val dest = File.createTempFile("module_" + System.currentTimeMillis(), ".jar")
-                            dest.deleteOnExit()
+                            val dest = File("/tmp/" + ("" + System.currentTimeMillis() + "_" + Random().nextLong() % 99999) + ".jar")
                             part.streamProvider().use { input -> dest.outputStream().buffered().use { output -> input.copyToSuspend(output) } }
                             try {
                                 manager.uploadNewModule(dest, part.originalFileName)
