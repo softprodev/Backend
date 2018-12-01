@@ -283,10 +283,6 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         bitcoin.sendCoins(amount, recipientAddress);
     }
 
-    @Override
-    public List<TransactionView> getAllTransactions() throws WalletNotInitialized {
-        return bitcoin.getAllTransactions();
-    }
     /*
      * Utilities
      */

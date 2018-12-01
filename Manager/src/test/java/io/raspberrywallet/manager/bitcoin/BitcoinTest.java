@@ -1,8 +1,6 @@
 package io.raspberrywallet.manager.bitcoin;
 
-import com.stasbar.Logger;
 import io.raspberrywallet.contract.CommunicationChannel;
-import io.raspberrywallet.contract.TransactionView;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.Configuration;
 import org.bitcoinj.core.Sha256Hash;
@@ -11,7 +9,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +34,9 @@ public class BitcoinTest {
         // balance 0.15001595
         privateKeyHash = new String(Sha256Hash.hash("rasperrywallet is the best bitcoin wallet ever".getBytes()));
 
-        Configuration configuration = Configuration.testConfiguration();
+        File tempBaseDir = Paths.get("/", "tmp", "wallet").toFile();
+        tempBaseDir.mkdirs();
+        Configuration configuration = new Configuration(tempBaseDir.getAbsolutePath());
         WalletCrypter walletCrypter = new WalletCrypter();
         CommunicationChannel communicationChannel = new CommunicationChannel();
         bitcoin = new Bitcoin(configuration, walletCrypter, communicationChannel);
@@ -62,11 +64,7 @@ public class BitcoinTest {
 
     @Test
     void getCurrentReceiveAddress() throws WalletNotInitialized {
-        if (bitcoin.getWalletFile().length() > 0)
-            bitcoin.setupWalletFromFile(privateKeyHash, true);
-        else
-            bitcoin.setupWalletFromMnemonic(mnemonicCode, privateKeyHash, true);
-
+        should_restore_from_file();
         String currentAddress = bitcoin.getCurrentReceiveAddress();
 
         assertNotNull(currentAddress);
@@ -86,50 +84,17 @@ public class BitcoinTest {
 
     @Test
     void getEstimatedBalance() throws WalletNotInitialized {
-        if (bitcoin.getWalletFile().length() > 0)
-            bitcoin.setupWalletFromFile(privateKeyHash, true);
-        else
-            bitcoin.setupWalletFromMnemonic(mnemonicCode, privateKeyHash, true);
+        should_restore_from_file();
         String balance = bitcoin.getEstimatedBalance();
         println(balance);
     }
 
     @Test
     void getAvailableBalance() throws WalletNotInitialized {
-        if (bitcoin.getWalletFile().length() > 0)
-            bitcoin.setupWalletFromFile(privateKeyHash, true);
-        else
-            bitcoin.setupWalletFromMnemonic(mnemonicCode, privateKeyHash, true);
+        should_restore_from_file();
         String availableBalance = bitcoin.getAvailableBalance();
         println(availableBalance);
     }
 
-    @Test
-    void sendFunds() throws WalletNotInitialized {
-        if (bitcoin.getWalletFile().length() > 0)
-            bitcoin.setupWalletFromFile(privateKeyHash, true);
-        else
-            bitcoin.setupWalletFromMnemonic(mnemonicCode, privateKeyHash, true);
-        String destinationAddress = "mk7exmQTiXjqzAMaxzBSHYezjkNvJGNGHX";
-        String amount = "0.0001";
-
-        bitcoin.sendCoins(amount, destinationAddress);
-    }
-
-    @Test
-    void printAllTransactionsForAddress() throws WalletNotInitialized {
-        if (bitcoin.getWalletFile().length() > 0)
-            bitcoin.setupWalletFromFile(privateKeyHash, true);
-        else
-            bitcoin.setupWalletFromMnemonic(mnemonicCode, privateKeyHash, true);
-
-        final List<TransactionView> transactions = bitcoin.getAllTransactions();
-
-        int i = 1;
-        for (TransactionView tx : transactions) {
-            Logger.d(String.format("[%d] %s", i, tx.toString()));
-            i++;
-        }
-    }
 
 }

@@ -2,7 +2,6 @@ package io.raspberrywallet.mock
 
 import io.raspberrywallet.contract.Manager
 import io.raspberrywallet.contract.Response
-import io.raspberrywallet.contract.TransactionView
 import io.raspberrywallet.contract.WalletStatus
 import io.raspberrywallet.contract.module.Module
 import io.raspberrywallet.contract.module.ModuleState
@@ -13,10 +12,6 @@ import java.util.function.IntConsumer
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
-    override fun getAllTransactions(): MutableList<TransactionView> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     override fun addBlockChainProgressListener(listener: DoubleConsumer) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

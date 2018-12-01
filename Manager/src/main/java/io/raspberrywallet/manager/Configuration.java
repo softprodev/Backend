@@ -14,9 +14,6 @@ import org.apache.commons.lang.builder.ToStringStyle;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 
 import static io.raspberrywallet.manager.Utils.println;
@@ -112,11 +109,8 @@ final public class Configuration {
         return config;
     }
 
-    public static Configuration testConfiguration() throws IOException {
-        Path testPath = Paths.get("/", "tmp", "wallet");
-        if (!testPath.toFile().exists())
-            Files.createDirectory(testPath);
-        return new Configuration(testPath.toString());
+    static Configuration testConfiguration() {
+        return new Configuration("/tmp/wallet");
     }
 
     @NoArgsConstructor

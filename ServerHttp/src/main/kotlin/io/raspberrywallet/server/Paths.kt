@@ -7,7 +7,6 @@ sealed class Paths {
 
     object Utils : Paths() {
         const val ping = prefix + "ping"
-        const val allTransactions = prefix + "allTransactions"
         const val cpuTemp = prefix + "cpuTemp"
         const val setDatabasePassword = prefix + "setDatabasePassword";
     }
