@@ -6,7 +6,6 @@ public class CliUtils {
     public static CommandLine parseArgs(String[] args) {
         Options options = new Options() {{
             addOption(Opts.CONFIG.option);
-            addOption(Opts.MOCK_MANAGER.option);
         }};
         HelpFormatter helpFormatter = new HelpFormatter();
         DefaultParser parser = new DefaultParser();

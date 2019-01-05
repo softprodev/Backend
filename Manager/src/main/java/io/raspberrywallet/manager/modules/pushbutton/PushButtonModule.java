@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class PushButtonModule extends Module<PushButtonConfig> {
     public static final String PRESSED = "pressed";
-    private final Pin BUTTON_GPIO_PINS = RaspiPin.getPinByAddress(configuration.getPin());
+    private final static Pin BUTTON_GPIO_PINS = RaspiPin.GPIO_04;
 
     private final GpioController gpio;
     private final GpioPinDigitalInput pushButton;
@@ -35,26 +35,25 @@ public class PushButtonModule extends Module<PushButtonConfig> {
         pushButton = gpio.provisionDigitalInputPin(BUTTON_GPIO_PINS);
         initialize();
     }
-
+    
     private void initialize() {
         pushButton.addListener((GpioPinListenerDigital) event -> {
-            setStatusString("Ready");
                     setInput(PRESSED, event.getState().isHigh() + "");
                     System.out.println("PushButonModule: " + event.getState().getName());
                 }
         );
     }
-
+    
     @Override
     protected byte[] encrypt(byte[] data) {
         return data;
     }
-
+    
     @Override
     protected byte[] decrypt(byte[] payload) {
         return payload;
     }
-
+    
     @Override
     protected void validateInputs() throws RequiredInputNotFound {
         if (!hasInput(PRESSED) || !Boolean.parseBoolean(getInput(PRESSED)))
@@ -64,9 +63,9 @@ public class PushButtonModule extends Module<PushButtonConfig> {
     @NotNull
     @Override
     public String getDescription() {
-        return "Module requires push physical button on the hardware wallet.";
+        return "Module for pushing physical button on the hardware wallet.";
     }
-
+    
     @Override
     public String getHtmlUi() {
         return null;

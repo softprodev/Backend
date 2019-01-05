@@ -358,10 +358,11 @@ public class Bitcoin {
      */
     @NotNull
     private TransactionView mapTransactionToTransactionView(@NotNull final Wallet wallet, @NotNull Transaction tx) {
+        TransactionView txView = new TransactionView();
         // SHA256(Transaction) in hex encoding
-        final String hashAsString = tx.getHashAsString();
+        txView.setTxHash(tx.getHashAsString());
         // The earliest time at which the transaction was seen
-        final long creationTimestamp = tx.getUpdateTime().getTime();
+        txView.setCreationTimestamp(tx.getUpdateTime().getTime());
 
         // There are different ways of revealing address depending on the script type
         // 1. P2PKH (Pay to public key hash)
@@ -386,6 +387,7 @@ public class Bitcoin {
                     }
                 }).collect(toList());
 
+        txView.setInputAddresses(inputAddresses);
 
         // Collect output addresses in user friendly Base58 form
         final List<String> outputAddresses = tx.getOutputs().stream()
@@ -394,26 +396,18 @@ public class Bitcoin {
                                 .getScriptPubKey().getToAddress(params).toBase58()
                 ).collect(toList());
 
-        final String amountFromMe = tx.getValueSentFromMe(wallet).toFriendlyString();
-        final String amountToMe = tx.getValueSentToMe(wallet).toFriendlyString();
+        txView.setOutputAddresses(outputAddresses);
 
+        txView.setAmountFromMe(tx.getValueSentFromMe(wallet).toFriendlyString());
+        txView.setAmountToMe(tx.getValueSentToMe(wallet).toFriendlyString());
 
         // Fee is the difference between outputs and inputs
         long fee = Math.max(0, tx.getInputSum().getValue() - tx.getOutputSum().getValue());
-        final String feeFormatted = Coin.valueOf(fee).toFriendlyString();
+        txView.setFee(Coin.valueOf(fee).toFriendlyString());
 
         // How many blocks have been placed on top of this transaction's block
-        final int confirmations = tx.getConfidence().getDepthInBlocks();
-        return new TransactionView(
-                hashAsString,
-                creationTimestamp,
-                inputAddresses,
-                outputAddresses,
-                amountFromMe,
-                amountToMe,
-                feeFormatted,
-                confirmations
-        );
+        txView.setConfirmations(tx.getConfidence().getDepthInBlocks());
+        return txView;
     }
 
 

@@ -1,6 +1,5 @@
 package io.raspberrywallet.mock;
 
-import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
@@ -16,10 +15,6 @@ class Base58 {
         for (int i = 0; i < ALPHABET.length; i++) {
             INDEXES[ALPHABET[i]] = i;
         }
-    }
-
-    public static String newAddress(SecureRandom random) {
-        return encode(random.generateSeed(32));
     }
 
     public static String encode(byte[] input) {

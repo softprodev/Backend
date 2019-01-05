@@ -14,4 +14,3 @@ out/
 build/
 *.bin
 gradle/
-seeds.txt
