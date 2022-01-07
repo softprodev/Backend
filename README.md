@@ -212,16 +212,6 @@ You can assign values to other fields implemented in `PinModuleConfig` class ana
 ## Documents
 More documents can be found in dedicated repository [here](https://github.com/RaspberryWallet/Documents)
 
-## Authors
-
-[//]: https://tablesgenerator.com/markdown_tables
-
-| Name                                                 | email                        |
-|------------------------------------------------------|------------------------------|
-| [Stanisław Barański](https://github.com/stasbar)     | stasbar1995 at gmail.com     |
-| [Patryk Milewski](https://github.com/PatrykMilewski) | patryk.milewski at gmail.com |
-| [Piotr Pabis](https://github.com/pfoof)              | rotworm0 at yahoo.pl         |
-
 ## Changelog
 
 [//]: https://tablesgenerator.com/markdown_tables
